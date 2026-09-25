@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyberPass Web — Next-Gen Identity &amp; Password Intelligence Platform</title>
+
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Font Awesome 6 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<!-- Google Font -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- CryptoJS (HMAC-SHA1 primitive for TOTP) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+<!-- QRCode generator -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+  :root{
+    --bg-deep:#030712;
+    --bg-panel:#0F172A;
+    --cyan:#06B6D4;
+    --purple:#A855F7;
+    --crimson:#EF4444;
+    --emerald:#10B981;
+    --amber:#F59E0B;
+    --border-soft: rgba(148,163,184,0.14);
+    --text-dim:#94A3B8;
+  }
+  *{ box-sizing:border-box; }
+  html,body{
+    background:
+      radial-gradient(circle at 15% 10%, rgba(168,85,247,0.10), transparent 40%),
+      radial-gradient(circle at 85% 0%, rgba(6,182,212,0.12), transparent 45%),
+      var(--bg-deep);
+    color:#E2E8F0;
+    font-family:'Space Grotesk', system-ui, sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar{ width:8px; height:8px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:rgba(6,182,212,0.35); border-radius:8px; }
+
+  .glass{
+    background: linear-gradient(180deg, rgba(15,23,42,0.75), rgba(15,23,42,0.55));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border:1px solid var(--border-soft);
+    border-radius:20px;
+    position:relative;
+  }
+  .glass::before{
+    content:"";
+    position:absolute; inset:0;
+    border-radius:20px;
+    padding:1px;
+    background:linear-gradient(135deg, rgba(6,182,212,0.35), rgba(168,85,247,0.15) 40%, transparent 70%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events:none;
+  }
+
+  .glow-cyan{ box-shadow: 0 0 0 1px rgba(6,182,212,0.15), 0 0 40px -12px rgba(6,182,212,0.45); }
+  .glow-purple{ box-shadow: 0 0 0 1px rgba(168,85,247,0.15), 0 0 40px -12px rgba(168,85,247,0.45); }
+
+  .field{
+    background: rgba(3,7,18,0.6);
+    border:1px solid var(--border-soft);
+    border-radius:12px;
+    color:#E2E8F0;
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+  .field:focus{
+    outline:none;
+    border-color: var(--cyan);
+    box-shadow: 0 0 0 3px rgba(6,182,212,0.18);
+  }
+
+  .btn{
+    border-radius:12px;
+    font-weight:600;
+    transition: transform .15s ease, box-shadow .15s ease, background .2s ease;
+  }
+  .btn:active{ transform: scale(0.97); }
+  .btn-primary{
+    background: linear-gradient(135deg, var(--cyan), #0891B2);
+    color:#03151A;
+  }
+  .btn-primary:hover{ box-shadow: 0 0 26px -6px rgba(6,182,212,0.7); }
+  .btn-ghost{
+    background: rgba(148,163,184,0.08);
+    border:1px solid var(--border-soft);
+    color:#E2E8F0;
+  }
+  .btn-ghost:hover{ background: rgba(148,163,184,0.15); }
+  .btn-purple{
+    background: linear-gradient(135deg, var(--purple), #7E22CE);
+    color:#0B0616;
+  }
+  .btn-purple:hover{ box-shadow: 0 0 26px -6px rgba(168,85,247,0.7); }
+
+  .strength-track{
+    height:10px; border-radius:999px;
+    background: rgba(148,163,184,0.12);
+    overflow:hidden;
+    position:relative;
+  }
+  .strength-fill{
+    height:100%;
+    width:0%;
+    border-radius:999px;
+    transition: width .35s ease, background .35s ease;
+    position:relative;
+  }
+  .strength-fill::after{
+    content:"";
+    position:absolute; inset:0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    animation: shimmer 2.2s linear infinite;
+  }
+  @keyframes shimmer{
+    0%{ transform: translateX(-100%); }
+    100%{ transform: translateX(100%); }
+  }
+
+  .badge{
+    display:inline-flex; align-items:center; gap:6px;
+    padding:4px 12px; border-radius:999px;
+    font-size:0.72rem; font-weight:600; letter-spacing:.02em;
+    border:1px solid currentColor;
+  }
+
+  .toggle-eye{ cursor:pointer; color:var(--text-dim); transition: color .15s ease; }
+  .toggle-eye:hover{ color:var(--cyan); }
+
+  .toast{
+    position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(20px);
+    background: linear-gradient(135deg, rgba(16,185,129,0.95), rgba(6,182,212,0.9));
+    color:#03151A; font-weight:600;
+    padding:12px 22px; border-radius:14px;
+    box-shadow: 0 10px 40px -10px rgba(6,182,212,0.6);
+    opacity:0; pointer-events:none;
+    transition: opacity .25s ease, transform .25s ease;
+    z-index:60;
+    display:flex; align-items:center; gap:10px;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  .ring-wrap{ position:relative; width:96px; height:96px; }
+  .ring-wrap svg{ transform: rotate(-90deg); }
+  .ring-bg{ fill:none; stroke:rgba(148,163,184,0.15); stroke-width:6; }
+  .ring-fg{ fill:none; stroke:var(--cyan); stroke-width:6; stroke-linecap:round; transition: stroke-dashoffset 1s linear, stroke .3s ease; }
+
+  .totp-digits{
+    font-family:'JetBrains Mono', monospace;
+    letter-spacing:0.35em;
+    font-size:2.4rem;
+    font-weight:700;
+    background: linear-gradient(90deg, var(--cyan), var(--purple));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+
+  .check-item{
+    display:flex; align-items:center; gap:8px;
+    font-size:0.82rem; color:var(--text-dim);
+  }
+  .check-item i{ width:14px; }
+  .check-pass{ color:var(--emerald); }
+  .check-fail{ color:var(--crimson); }
+
+  .section-title{
+    font-size:0.72rem; text-transform:uppercase; letter-spacing:0.12em;
+    color:var(--text-dim); font-weight:600;
+  }
+
+  input[type="range"]{ -webkit-appearance:none; height:6px; border-radius:999px; background: rgba(148,163,184,0.18); }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:18px; height:18px; border-radius:50%;
+    background: var(--cyan); cursor:pointer; box-shadow:0 0 12px rgba(6,182,212,0.7);
+    border:2px solid #03151A;
+  }
+  input[type="checkbox"]{ accent-color: var(--cyan); }
+
+  #qrcode-box{ background:#fff; padding:10px; border-radius:14px; display:inline-block; }
+  #qrcode-box img, #qrcode-box canvas{ display:block; border-radius:6px; }
+
+  .fade-in{ animation: fadeIn .5s ease both; }
+  @keyframes fadeIn{ from{ opacity:0; transform:translateY(6px);} to{ opacity:1; transform:translateY(0);} }
+
+  @media (prefers-reduced-motion: reduce){
+    .strength-fill::after{ animation:none; }
+    .fade-in{ animation:none; }
+  }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- ================= HEADER ================= -->
+<header class="border-b border-white/5 sticky top-0 z-40 backdrop-blur-md bg-[#030712]/70">
+  <div class="max-w-7xl mx-auto px-5 sm:px-8 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center glow-cyan" style="background:linear-gradient(135deg,#06B6D4,#A855F7);">
+        <i class="fa-solid fa-shield-halved text-[#03151A] text-lg"></i>
+      </div>
+      <div>
+        <h1 class="text-lg font-bold tracking-tight leading-none">CyberPass<span style="color:var(--cyan);">Web</span></h1>
+        <p class="text-[11px] text-slate-400 leading-none mt-1">Identity &amp; Password Intelligence Platform</p>
+      </div>
+    </div>
+    <div class="hidden sm:flex items-center gap-2 text-xs mono text-slate-400">
+      <span class="badge" style="color:var(--emerald);"><i class="fa-solid fa-circle text-[6px]"></i> 100% Client-Side</span>
+      <span class="badge" style="color:var(--cyan);"><i class="fa-solid fa-lock"></i> Zero Data Leaves Device</span>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-5 sm:px-8 py-10 space-y-10">
+
+  <!-- ============ HERO ============ -->
+  <section class="fade-in">
+    <p class="section-title mb-2">Password &amp; Identity Command Center</p>
+    <h2 class="text-3xl sm:text-4xl font-bold tracking-tight max-w-2xl">Measure, harden, and generate credentials with real cryptographic math — no server, no tracking.</h2>
+  </section>
+
+  <!-- ============ ROW 1: ANALYZER + BREACH ============ -->
+  <section class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+    <!-- Entropy / Crack Time Analyzer -->
+    <div class="glass glow-cyan p-6 sm:p-8 lg:col-span-3 fade-in">
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+          <i class="fa-solid fa-magnifying-glass-chart" style="color:var(--cyan);"></i>
+          <h3 class="font-semibold text-lg">Password Entropy &amp; Crack-Time Calculator</h3>
+        </div>
+      </div>
+
+      <label class="section-title block mb-2">Enter a password to analyze</label>
+      <div class="relative mb-5">
+        <input id="pw-input" type="password" placeholder="Type or paste a password…"
+          class="field w-full px-4 py-3 pr-11 mono text-sm" autocomplete="off" spellcheck="false">
+        <i id="pw-toggle" class="fa-solid fa-eye toggle-eye absolute right-4 top-1/2 -translate-y-1/2"></i>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        <div class="glass !rounded-xl p-3">
+          <p class="text-[10px] text-slate-400 uppercase tracking-wide">Length</p>
+          <p id="stat-length" class="text-xl font-bold mono">0</p>
+        </div>
+        <div class="glass !rounded-xl p-3">
+          <p class="text-[10px] text-slate-400 uppercase tracking-wide">Entropy</p>
+          <p id="stat-entropy" class="text-xl font-bold mono">0.0<span class="text-xs text-slate-400"> bits</span></p>
+        </div>
+        <div class="glass !rounded-xl p-3 col-span-2 sm:col-span-1">
+          <p class="text-[10px] text-slate-400 uppercase tracking-wide">Pool Size (R)</p>
+          <p id="stat-pool" class="text-xl font-bold mono">0</p>
+        </div>
+        <div class="glass !rounded-xl p-3 col-span-2 sm:col-span-1">
+          <p class="text-[10px] text-slate-400 uppercase tracking-wide">Rating</p>
+          <p id="stat-rating" class="text-sm font-bold">—</p>
+        </div>
+      </div>
+
+      <div class="mb-2 flex items-center justify-between">
+        <span class="section-title">Strength</span>
+        <span id="strength-label" class="text-xs font-semibold text-slate-300">Empty</span>
+      </div>
+      <div class="strength-track mb-6">
+        <div id="strength-fill" class="strength-fill"></div>
+      </div>
+
+      <div class="glass !rounded-xl p-4 mb-6 flex items-center gap-4" style="border-color: rgba(6,182,212,0.25);">
+        <i class="fa-solid fa-server text-2xl" style="color:var(--cyan);"></i>
+        <div>
+          <p class="text-[11px] text-slate-400 uppercase tracking-wide">Est. Brute-Force Time — RTX 4090 Cluster (100B guesses/sec)</p>
+          <p id="crack-time" class="text-2xl font-bold mono" style="color:var(--cyan);">Instant</p>
+        </div>
+      </div>
+
+      <div>
+        <p class="section-title mb-3">Vulnerability Scan</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2" id="vuln-list">
+          <div class="check-item" data-check="length"><i class="fa-solid fa-circle-question"></i><span>Minimum length (≥ 12 chars)</span></div>
+          <div class="check-item" data-check="upper"><i class="fa-solid fa-circle-question"></i><span>Contains uppercase letters</span></div>
+          <div class="check-item" data-check="lower"><i class="fa-solid fa-circle-question"></i><span>Contains lowercase letters</span></div>
+          <div class="check-item" data-check="number"><i class="fa-solid fa-circle-question"></i><span>Contains digits</span></div>
+          <div class="check-item" data-check="symbol"><i class="fa-solid fa-circle-question"></i><span>Contains symbols</span></div>
+          <div class="check-item" data-check="repeat"><i class="fa-solid fa-circle-question"></i><span>No character repetition (aaa, 111)</span></div>
+          <div class="check-item" data-check="sequential"><i class="fa-solid fa-circle-question"></i><span>No sequential patterns (abc, 123, qwerty)</span></div>
+          <div class="check-item" data-check="dictionary"><i class="fa-solid fa-circle-question"></i><span>No common dictionary words</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Breach Checker -->
+    <div class="glass p-6 sm:p-8 lg:col-span-2 fade-in flex flex-col">
+      <div class="flex items-center gap-3 mb-6">
+        <i class="fa-solid fa-database" style="color:var(--crimson);"></i>
+        <h3 class="font-semibold text-lg">Known Breach &amp; Dictionary Check</h3>
+      </div>
+      <p class="text-sm text-slate-400 mb-6">Checked instantly, client-side, against a built-in list of the most common leaked passwords found in historic breach corpora. Nothing is sent anywhere.</p>
+
+      <div id="breach-idle" class="flex-1 flex flex-col items-center justify-center text-center py-8 gap-3">
+        <i class="fa-solid fa-shield text-4xl text-slate-600"></i>
+        <p class="text-sm text-slate-500">Start typing a password above to run the check.</p>
+      </div>
+
+      <div id="breach-safe" class="hidden flex-1 flex-col items-center justify-center text-center py-8 gap-3">
+        <i class="fa-solid fa-circle-check text-4xl" style="color:var(--emerald);"></i>
+        <p class="font-semibold" style="color:var(--emerald);">Not found in the known-breach dictionary</p>
+        <p class="text-xs text-slate-500">This does not guarantee safety elsewhere — always use unique passwords.</p>
+      </div>
+
+      <div id="breach-hit" class="hidden flex-1 flex-col items-center justify-center text-center py-8 gap-3">
+        <i class="fa-solid fa-triangle-exclamation text-4xl" style="color:var(--crimson);"></i>
+        <p class="font-semibold" style="color:var(--crimson);">Compromised! This password appears in leaked breach lists</p>
+        <p class="text-xs text-slate-400">It should never be used — even with modifications, attackers try it first.</p>
+      </div>
+
+      <div class="mt-6 pt-6 border-t border-white/5">
+        <p class="text-[11px] text-slate-500">Dictionary size: <span class="mono text-slate-300" id="dict-size">0</span> entries loaded locally.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ROW 2: GENERATOR + TOTP ============ -->
+  <section class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+    <!-- Generator -->
+    <div class="glass glow-purple p-6 sm:p-8 lg:col-span-2 fade-in">
+      <div class="flex items-center gap-3 mb-6">
+        <i class="fa-solid fa-key" style="color:var(--purple);"></i>
+        <h3 class="font-semibold text-lg">Smart Password &amp; Passphrase Generator</h3>
+      </div>
+
+      <div class="flex gap-2 mb-6">
+        <button id="mode-password" class="btn btn-primary flex-1 py-2 text-sm">Password</button>
+        <button id="mode-passphrase" class="btn btn-ghost flex-1 py-2 text-sm">Passphrase</button>
+      </div>
+
+      <!-- Password options -->
+      <div id="gen-password-opts">
+        <div class="flex items-center justify-between mb-2">
+          <span class="section-title">Length</span>
+          <span id="gen-length-val" class="mono text-sm font-semibold" style="color:var(--purple);">20</span>
+        </div>
+        <input id="gen-length" type="range" min="8" max="64" value="20" class="w-full mb-6">
+
+        <div class="grid grid-cols-2 gap-3 mb-6 text-sm">
+          <label class="flex items-center gap-2"><input type="checkbox" id="opt-upper" checked> Uppercase (A-Z)</label>
+          <label class="flex items-center gap-2"><input type="checkbox" id="opt-lower" checked> Lowercase (a-z)</label>
+          <label class="flex items-center gap-2"><input type="checkbox" id="opt-number" checked> Numbers (0-9)</label>
+          <label class="flex items-center gap-2"><input type="checkbox" id="opt-symbol" checked> Symbols (!@#$)</label>
+        </div>
+      </div>
+
+      <!-- Passphrase options -->
+      <div id="gen-passphrase-opts" class="hidden">
+        <div class="flex items-center justify-between mb-2">
+          <span class="section-title">Word Count</span>
+          <span id="gen-words-val" class="mono text-sm font-semibold" style="color:var(--purple);">5</span>
+        </div>
+        <input id="gen-words" type="range" min="3" max="10" value="5" class="w-full mb-6">
+        <div class="mb-6 text-sm">
+          <label class="flex items-center gap-2"><input type="checkbox" id="opt-capitalize" checked> Capitalize Words</label>
+          <label class="flex items-center gap-2 mt-2"><input type="checkbox" id="opt-numsep" checked> Separate with a Number</label>
+        </div>
+      </div>
+
+      <div class="relative mb-4">
+        <input id="gen-output" type="text" readonly placeholder="Click Generate…"
+          class="field w-full px-4 py-3 pr-11 mono text-sm" style="color:var(--purple);">
+        <i id="gen-copy" class="fa-solid fa-copy toggle-eye absolute right-4 top-1/2 -translate-y-1/2"></i>
+      </div>
+
+      <button id="gen-generate" class="btn btn-purple w-full py-3 text-sm"><i class="fa-solid fa-bolt mr-2"></i>Generate</button>
+    </div>
+
+    <!-- TOTP Engine -->
+    <div class="glass p-6 sm:p-8 lg:col-span-3 fade-in">
+      <div class="flex items-center gap-3 mb-6">
+        <i class="fa-solid fa-satellite-dish" style="color:var(--emerald);"></i>
+        <h3 class="font-semibold text-lg">Interactive TOTP &amp; Dynamic Pass Engine</h3>
+        <span class="badge ml-auto" style="color:var(--emerald);">RFC 6238</span>
+      </div>
+
+      <label class="section-title block mb-2">Base32 Secret Key</label>
+      <div class="flex gap-2 mb-6">
+        <input id="totp-secret" type="text" value="JBSWY3DPEHPK3PXP" spellcheck="false"
+          class="field flex-1 px-4 py-3 mono text-sm tracking-wider" style="color:var(--emerald);">
+        <button id="totp-random" class="btn btn-ghost px-4 text-sm" title="Generate Random Secret"><i class="fa-solid fa-dice"></i></button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-6 items-center mb-6">
+        <div class="flex items-center gap-6">
+          <div class="ring-wrap">
+            <svg viewBox="0 0 100 100" width="96" height="96">
+              <circle class="ring-bg" cx="50" cy="50" r="42"></circle>
+              <circle id="ring-fg" class="ring-fg" cx="50" cy="50" r="42" stroke-dasharray="263.9" stroke-dashoffset="0"></circle>
+            </svg>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <span id="totp-seconds" class="mono font-bold text-lg">30</span>
+            </div>
+          </div>
+          <div>
+            <p class="section-title mb-1">Current Code</p>
+            <p id="totp-code" class="totp-digits">------</p>
+          </div>
+        </div>
+        <div id="qrcode-box"></div>
+      </div>
+
+      <div class="text-xs text-slate-500 flex items-center gap-2">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>Scan the QR with Google Authenticator / Authy, or enter the secret manually. Code refreshes every 30 seconds using pure HMAC-SHA1.</span>
+      </div>
+    </div>
+  </section>
+
+  <footer class="text-center text-xs text-slate-600 pt-6 pb-4">
+    CyberPass Web — All computation happens locally in your browser. No network requests, no telemetry.
+  </footer>
+</main>
+
+<div id="toast" class="toast"><i class="fa-solid fa-check"></i><span id="toast-text">Copied!</span></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     UTILITIES
+  ============================================================ */
+  function $(id){ return document.getElementById(id); }
+
+  function showToast(msg){
+    var t = $('toast');
+    $('toast-text').textContent = msg;
+    t.classList.add('show');
+    clearTimeout(showToast._tid);
+    showToast._tid = setTimeout(function(){ t.classList.remove('show'); }, 1800);
+  }
+
+  /* ============================================================
+     TOP 100 WORST / MOST BREACHED PASSWORDS (built-in dictionary)
+  ============================================================ */
+  var BREACH_DICTIONARY = [
+    "123456","123456789","qwerty","password","12345","qwerty123","1q2w3e","12345678",
+    "111111","1234567890","1234567","password1","123123","000000","iloveyou","1234",
+    "1q2w3e4r5t","qwertyuiop","monkey","dragon","123321","football","letmein","696969",
+    "shadow","master","666666","qwertyuiop123","123qwe","abc123","121212","password123",
+    "iloveyou1","sunshine","princess","admin","welcome","login","solo","abc12345",
+    "starwars","trustno1","passw0rd","1234567891","zxcvbnm","qazwsx","asdfghjkl","freedom",
+    "whatever","qwe123","aa123456","superman","1qaz2wsx","qwerty1","michael","liverpool",
+    "chelsea","charlie","donald","cheese","hello","access","flower","hottie",
+    "loveme","jordan23","harley","ranger","daniel","hunter","buster","soccer",
+    "batman","andrew","tigger","joshua","amanda","summer","2000","jessica",
+    "pepper","banana","ashley","ninja","azerty","666666","000000","guest",
+    "changeme","letmein123","p@ssw0rd","admin123","root","toor","test123","user",
+    "google","facebook","instagram","password12","987654321","qwerty12345","asdasd","121212123"
+  ];
+  var BREACH_SET = new Set(BREACH_DICTIONARY.map(function(p){ return p.toLowerCase(); }));
+  $('dict-size').textContent = BREACH_SET.size;
+
+  var COMMON_WORDS_FOR_DICT_CHECK = [
+    "password","dragon","monkey","football","baseball","master","superman","batman",
+    "sunshine","princess","welcome","freedom","letmein","admin","login","starwars",
+    "shadow","michael","jennifer","hunter","summer","jordan","harley","ranger",
+    "buster","soccer","hockey","killer","george","andrew","charlie","matthew"
+  ];
+
+  /* ============================================================
+     PASSWORD ENTROPY & CRACK-TIME ANALYZER
+  ============================================================ */
+  var GUESSES_PER_SECOND = 100e9; // RTX 4090 cluster assumption
+
+  function poolSize(pw){
+    var r = 0;
+    if(/[a-z]/.test(pw)) r += 26;
+    if(/[A-Z]/.test(pw)) r += 26;
+    if(/[0-9]/.test(pw)) r += 10;
+    if(/[^a-zA-Z0-9]/.test(pw)) r += 32;
+    return r;
+  }
+
+  function calcEntropy(pw){
+    if(!pw.length) return 0;
+    var r = poolSize(pw);
+    if(r === 0) return 0;
+    return pw.length * (Math.log(r) / Math.log(2));
+  }
+
+  function formatDuration(seconds){
+    if(!isFinite(seconds) || seconds < 0) seconds = 0;
+    if(seconds < 0.001) return "Instantly";
+    if(seconds < 1) return (seconds*1000).toFixed(0) + " Milliseconds";
+    if(seconds < 60) return seconds.toFixed(1) + " Seconds";
+    var minutes = seconds/60;
+    if(minutes < 60) return minutes.toFixed(1) + " Minutes";
+    var hours = minutes/60;
+    if(hours < 24) return hours.toFixed(1) + " Hours";
+    var days = hours/24;
+    if(days < 30) return days.toFixed(1) + " Days";
+    var months = days/30.44;
+    if(months < 12) return months.toFixed(1) + " Months";
+    var years = days/365.25;
+    if(years < 1000) return years.toFixed(1) + " Years";
+    if(years < 1e6) return (years/1e3).toFixed(1) + " Thousand Years";
+    if(years < 1e9) return (years/1e6).toFixed(1) + " Million Years";
+    if(years < 1e12) return (years/1e9).toFixed(1) + " Billion Years";
+    if(years < 1e15) return (years/1e12).toFixed(1) + " Trillion Years";
+    return "Longer than the Age of the Universe";
+  }
+
+  function crackSeconds(entropyBits){
+    if(entropyBits <= 0) return 0;
+    var combinations = Math.pow(2, entropyBits);
+    return combinations / GUESSES_PER_SECOND;
+  }
+
+  function hasSequential(pw){
+    var lower = pw.toLowerCase();
+    var sequences = ["abcdefghijklmnopqrstuvwxyz","0123456789","qwertyuiop","asdfghjkl","zxcvbnm"];
+    for(var s=0; s<sequences.length; s++){
+      var seq = sequences[s];
+      for(var i=0; i<=seq.length-3; i++){
+        var fwd = seq.substring(i, i+3);
+        var rev = fwd.split('').reverse().join('');
+        if(lower.indexOf(fwd) !== -1 || lower.indexOf(rev) !== -1) return true;
+      }
+    }
+    return false;
+  }
+
+  function hasRepetition(pw){
+    return /(.)\1\1/.test(pw); // same char 3+ times in a row
+  }
+
+  function hasDictionaryWord(pw){
+    var lower = pw.toLowerCase();
+    for(var i=0; i<COMMON_WORDS_FOR_DICT_CHECK.length; i++){
+      if(lower.indexOf(COMMON_WORDS_FOR_DICT_CHECK[i]) !== -1) return true;
+    }
+    return false;
+  }
+
+  function setCheck(name, passed, hasValue){
+    var el = document.querySelector('.check-item[data-check="'+name+'"]');
+    if(!el) return;
+    var icon = el.querySelector('i');
+    el.classList.remove('check-pass','check-fail');
+    if(!hasValue){
+      icon.className = 'fa-solid fa-circle-question';
+      icon.style.color = '';
+      return;
+    }
+    if(passed){
+      icon.className = 'fa-solid fa-circle-check';
+      el.classList.add('check-pass');
+    } else {
+      icon.className = 'fa-solid fa-circle-xmark';
+      el.classList.add('check-fail');
+    }
+  }
+
+  function updateStrengthBar(entropy, pw){
+    var fill = $('strength-fill');
+    var label = $('strength-label');
+    var ratingEl = $('stat-rating');
+    var pct = Math.min(100, (entropy/100)*100);
+    fill.style.width = pw.length ? Math.max(pct, 4) + '%' : '0%';
+
+    var color, text, rating;
+    if(!pw.length){
+      color = 'rgba(148,163,184,0.2)'; text='Empty'; rating='—';
+    } else if(entropy < 28){
+      color = 'var(--crimson)'; text='Very Weak'; rating='F';
+    } else if(entropy < 45){
+      color = '#F97316'; text='Weak'; rating='D';
+    } else if(entropy < 60){
+      color = 'var(--amber)'; text='Fair'; rating='C';
+    } else if(entropy < 80){
+      color = 'var(--emerald)'; text='Strong'; rating='B';
+    } else if(entropy < 100){
+      color = 'var(--cyan)'; text='Very Strong'; rating='A';
+    } else {
+      color = 'var(--purple)'; text='Fortress-Grade'; rating='S';
+    }
+    fill.style.background = color;
+    label.textContent = text;
+    label.style.color = color;
+    ratingEl.textContent = rating;
+    ratingEl.style.color = color;
+  }
+
+  function analyzePassword(){
+    var pw = $('pw-input').value;
+    var entropy = calcEntropy(pw);
+    var r = poolSize(pw);
+
+    $('stat-length').textContent = pw.length;
+    $('stat-entropy').innerHTML = entropy.toFixed(1) + '<span class="text-xs text-slate-400"> bits</span>';
+    $('stat-pool').textContent = r;
+
+    updateStrengthBar(entropy, pw);
+
+    var secs = crackSeconds(entropy);
+    $('crack-time').textContent = pw.length ? formatDuration(secs) : "Instant";
+
+    var hasVal = pw.length > 0;
+    setCheck('length', pw.length >= 12, hasVal);
+    setCheck('upper', /[A-Z]/.test(pw), hasVal);
+    setCheck('lower', /[a-z]/.test(pw), hasVal);
+    setCheck('number', /[0-9]/.test(pw), hasVal);
+    setCheck('symbol', /[^a-zA-Z0-9]/.test(pw), hasVal);
+    setCheck('repeat', !hasRepetition(pw), hasVal);
+    setCheck('sequential', !hasSequential(pw), hasVal);
+    setCheck('dictionary', !hasDictionaryWord(pw), hasVal);
+
+    // breach checker
+    var idle = $('breach-idle'), safe = $('breach-safe'), hit = $('breach-hit');
+    idle.classList.add('hidden'); safe.classList.add('hidden'); hit.classList.add('hidden');
+    idle.classList.remove('flex'); safe.classList.remove('flex'); hit.classList.remove('flex');
+
+    if(!pw.length){
+      idle.classList.remove('hidden'); idle.classList.add('flex');
+    } else if(BREACH_SET.has(pw.toLowerCase())){
+      hit.classList.remove('hidden'); hit.classList.add('flex');
+    } else {
+      safe.classList.remove('hidden'); safe.classList.add('flex');
+    }
+  }
+
+  $('pw-input').addEventListener('input', analyzePassword);
+  $('pw-toggle').addEventListener('click', function(){
+    var input = $('pw-input');
+    var isPw = input.type === 'password';
+    input.type = isPw ? 'text' : 'password';
+    this.className = isPw ? 'fa-solid fa-eye-slash toggle-eye absolute right-4 top-1/2 -translate-y-1/2'
+                           : 'fa-solid fa-eye toggle-eye absolute right-4 top-1/2 -translate-y-1/2';
+  });
+  analyzePassword();
+
+  /* ============================================================
+     GENERATOR
+  ============================================================ */
+  var genMode = 'password';
+  var WORDLIST = [
+    "amber","anchor","atlas","aurora","basalt","beacon","binary","blaze","bramble","canyon",
+    "cascade","cedar","cinder","clover","comet","coral","crimson","crystal","cypher","dagger",
+    "delta","dune","ember","falcon","fjord","forge","fossil","frost","galaxy","glacier",
+    "granite","gravity","harbor","haven","horizon","indigo","ivory","jungle","kestrel","lagoon",
+    "lantern","lattice","lunar","magma","mantis","marble","meadow","meridian","mirage","mosaic",
+    "nebula","nectar","obsidian","onyx","opal","orbit","orchid","outpost","panther","paradox",
+    "phoenix","photon","pinnacle","prairie","prism","quartz","quasar","quiver","radiant","raven",
+    "reef","relic","ridge","rocket","rogue","rustle","saffron","sable","sapphire","savanna",
+    "scepter","shard","shimmer","signal","silver","solstice","sonar","spectrum","sphinx","spire",
+    "storm","summit","talon","tangerine","tempest","thicket","thistle","thunder","titan","torch",
+    "trench","tundra","umbra","vault","velvet","vertex","violet","vortex","willow","zenith"
+  ];
+
+  function setGenMode(mode){
+    genMode = mode;
+    $('mode-password').className = mode === 'password' ? 'btn btn-primary flex-1 py-2 text-sm' : 'btn btn-ghost flex-1 py-2 text-sm';
+    $('mode-passphrase').className = mode === 'passphrase' ? 'btn btn-primary flex-1 py-2 text-sm' : 'btn btn-ghost flex-1 py-2 text-sm';
+    $('gen-password-opts').classList.toggle('hidden', mode !== 'password');
+    $('gen-passphrase-opts').classList.toggle('hidden', mode !== 'passphrase');
+  }
+  $('mode-password').addEventListener('click', function(){ setGenMode('password'); });
+  $('mode-passphrase').addEventListener('click', function(){ setGenMode('passphrase'); });
+
+  $('gen-length').addEventListener('input', function(){ $('gen-length-val').textContent = this.value; });
+  $('gen-words').addEventListener('input', function(){ $('gen-words-val').textContent = this.value; });
+
+  function secureRandomInt(max){
+    var arr = new Uint32Array(1);
+    window.crypto.getRandomValues(arr);
+    return arr[0] % max;
+  }
+
+  function generatePassword(){
+    var length = parseInt($('gen-length').value, 10);
+    var useUpper = $('opt-upper').checked;
+    var useLower = $('opt-lower').checked;
+    var useNumber = $('opt-number').checked;
+    var useSymbol = $('opt-symbol').checked;
+
+    var UPPER = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    var LOWER = 'abcdefghijkmnpqrstuvwxyz';
+    var NUMBER = '23456789';
+    var SYMBOL = '!@#$%^&*()-_=+[]{};:,.<>?';
+
+    var pools = [];
+    if(useUpper) pools.push(UPPER);
+    if(useLower) pools.push(LOWER);
+    if(useNumber) pools.push(NUMBER);
+    if(useSymbol) pools.push(SYMBOL);
+
+    if(!pools.length){
+      showToast('Select at least one character type');
+      return '';
+    }
+
+    var all = pools.join('');
+    var result = [];
+
+    // guarantee at least one char from each selected pool
+    pools.forEach(function(pool){
+      result.push(pool[secureRandomInt(pool.length)]);
+    });
+    while(result.length < length){
+      result.push(all[secureRandomInt(all.length)]);
+    }
+    // shuffle (Fisher-Yates, secure)
+    for(var i = result.length - 1; i > 0; i--){
+      var j = secureRandomInt(i+1);
+      var tmp = result[i]; result[i] = result[j]; result[j] = tmp;
+    }
+    return result.slice(0, length).join('');
+  }
+
+  function generatePassphrase(){
+    var wordCount = parseInt($('gen-words').value, 10);
+    var capitalize = $('opt-capitalize').checked;
+    var numSep = $('opt-numsep').checked;
+
+    var words = [];
+    for(var i=0; i<wordCount; i++){
+      var w = WORDLIST[secureRandomInt(WORDLIST.length)];
+      if(capitalize) w = w.charAt(0).toUpperCase() + w.slice(1);
+      words.push(w);
+    }
+    var sep = '-';
+    if(numSep){
+      var insertAt = secureRandomInt(words.length);
+      words.splice(insertAt, 0, String(secureRandomInt(90)+10));
+    }
+    return words.join(sep);
+  }
+
+  $('gen-generate').addEventListener('click', function(){
+    var out = genMode === 'password' ? generatePassword() : generatePassphrase();
+    if(out) $('gen-output').value = out;
+  });
+
+  $('gen-copy').addEventListener('click', function(){
+    var val = $('gen-output').value;
+    if(!val) { showToast('Nothing to copy yet'); return; }
+    navigator.clipboard.writeText(val).then(function(){
+      showToast('Copied!');
+    }).catch(function(){
+      // fallback
+      var tmp = document.createElement('textarea');
+      tmp.value = val;
+      document.body.appendChild(tmp);
+      tmp.select();
+      try{ document.execCommand('copy'); showToast('Copied!'); } catch(e){ showToast('Copy failed'); }
+      document.body.removeChild(tmp);
+    });
+  });
+
+  // initialize with one generated password
+  $('gen-output').value = generatePassword();
+
+  /* ============================================================
+     TOTP ENGINE (RFC 6238) — pure HMAC-SHA1 via CryptoJS
+  ============================================================ */
+  var BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+
+  function base32ToWordArray(base32){
+    var clean = base32.toUpperCase().replace(/[^A-Z2-7]/g, '');
+    if(!clean.length) return null;
+    var bits = '';
+    for(var i=0; i<clean.length; i++){
+      var val = BASE32_ALPHABET.indexOf(clean[i]);
+      if(val === -1) return null;
+      bits += val.toString(2).padStart(5, '0');
+    }
+    var bytes = [];
+    for(var j=0; j+8 <= bits.length; j+=8){
+      bytes.push(parseInt(bits.substring(j, j+8), 2));
+    }
+    if(!bytes.length) return null;
+    // build CryptoJS WordArray from byte array
+    var words = [];
+    for(var k=0; k<bytes.length; k++){
+      words[k >>> 2] = (words[k >>> 2] || 0) | (bytes[k] << (24 - (k % 4) * 8));
+    }
+    return CryptoJS.lib.WordArray.create(words, bytes.length);
+  }
+
+  function intToWordArray8Bytes(num){
+    // 64-bit big-endian counter, JS-safe up to 2^53
+    var high = Math.floor(num / 4294967296);
+    var low = num % 4294967296;
+    return CryptoJS.lib.WordArray.create([high, low], 8);
+  }
+
+  function generateTOTP(base32Secret, forTime){
+    try{
+      var key = base32ToWordArray(base32Secret);
+      if(!key) return null;
+      var counter = Math.floor((forTime !== undefined ? forTime : Date.now()/1000) / 30);
+      var counterWA = intToWordArray8Bytes(counter);
+      var hmac = CryptoJS.HmacSHA1(counterWA, key);
+      var hmacWords = hmac.words;
+      var hmacBytes = [];
+      for(var i=0; i<hmac.sigBytes; i++){
+        hmacBytes.push((hmacWords[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff);
+      }
+      var offset = hmacBytes[hmacBytes.length - 1] & 0x0f;
+      var binCode = ((hmacBytes[offset] & 0x7f) << 24) |
+                    ((hmacBytes[offset+1] & 0xff) << 16) |
+                    ((hmacBytes[offset+2] & 0xff) << 8) |
+                    (hmacBytes[offset+3] & 0xff);
+      var otp = (binCode % 1000000).toString().padStart(6, '0');
+      return otp;
+    } catch(e){
+      return null;
+    }
+  }
+
+  var RING_CIRCUMFERENCE = 2 * Math.PI * 42;
+  $('ring-fg').setAttribute('stroke-dasharray', RING_CIRCUMFERENCE.toFixed(1));
+
+  var qrInstance = null;
+  function buildOtpAuthUrl(secret){
+    var label = encodeURIComponent('CyberPassWeb:user@device');
+    var issuer = encodeURIComponent('CyberPassWeb');
+    return 'otpauth://totp/' + label + '?secret=' + encodeURIComponent(secret.replace(/\s+/g,'')) + '&issuer=' + issuer + '&digits=6&period=30';
+  }
+
+  function renderQR(secret){
+    var box = $('qrcode-box');
+    box.innerHTML = '';
+    try{
+      qrInstance = new QRCode(box, {
+        text: buildOtpAuthUrl(secret),
+        width: 120,
+        height: 120,
+        colorDark: "#030712",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    } catch(e){
+      box.innerHTML = '<p class="text-xs text-red-600 p-4">QR unavailable</p>';
+    }
+  }
+
+  function refreshTOTP(){
+    var secret = $('totp-secret').value.trim();
+    var codeEl = $('totp-code');
+    var now = Date.now()/1000;
+    var secondsIntoWindow = Math.floor(now % 30);
+    var secondsLeft = 30 - secondsIntoWindow;
+
+    $('totp-seconds').textContent = secondsLeft;
+    var offset = RING_CIRCUMFERENCE * (secondsIntoWindow/30);
+    $('ring-fg').style.strokeDashoffset = offset.toFixed(1);
+    $('ring-fg').style.stroke = secondsLeft <= 5 ? 'var(--crimson)' : 'var(--cyan)';
+
+    var otp = generateTOTP(secret, now);
+    if(otp){
+      codeEl.textContent = otp.slice(0,3) + ' ' + otp.slice(3);
+      codeEl.style.opacity = 1;
+    } else {
+      codeEl.textContent = 'INVALID';
+      codeEl.style.opacity = 0.5;
+    }
+  }
+
+  var lastSecretRendered = null;
+  function tick(){
+    refreshTOTP();
+    var secret = $('totp-secret').value.trim();
+    if(secret !== lastSecretRendered && secret.length){
+      renderQR(secret);
+      lastSecretRendered = secret;
+    }
+  }
+
+  $('totp-secret').addEventListener('input', function(){ /* re-render handled in tick loop */ });
+
+  function randomBase32Secret(len){
+    var out = '';
+    for(var i=0; i<len; i++){
+      out += BASE32_ALPHABET[secureRandomInt(BASE32_ALPHABET.length)];
+    }
+    return out;
+  }
+
+  $('totp-random').addEventListener('click', function(){
+    $('totp-secret').value = randomBase32Secret(16);
+    lastSecretRendered = null; // force QR re-render
+    tick();
+    showToast('New secret generated');
+  });
+
+  tick();
+  setInterval(tick, 1000);
+
+})();
+</script>
+</body>
+</html>
