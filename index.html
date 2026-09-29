@@ -18,28 +18,48 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
+  /* Registered so theme colours interpolate smoothly (gradients & glows included) */
+  @property --accent{ syntax:'<color>'; inherits:true; initial-value:#38BDF8; }
+  @property --bg-main{ syntax:'<color>'; inherits:true; initial-value:#040A18; }
+  @property --surface{ syntax:'<color>'; inherits:true; initial-value:#0B1428; }
+  @property --border-c{ syntax:'<color>'; inherits:true; initial-value:rgba(56,189,248,0.16); }
+  @property --text-main{ syntax:'<color>'; inherits:true; initial-value:#E2E8F0; }
+  @property --text-muted{ syntax:'<color>'; inherits:true; initial-value:#94A3B8; }
+
   :root{
-    --bg-deep:#030712;
-    --bg-panel:#0F172A;
-    --cyan:#06B6D4;
-    --purple:#A855F7;
-    --crimson:#EF4444;
-    --emerald:#10B981;
-    --amber:#F59E0B;
-    --border-soft: rgba(148,163,184,0.14);
-    --text-dim:#94A3B8;
+    /* semantic colours (constant) */
+    --purple:#A855F7; --crimson:#EF4444; --emerald:#10B981; --amber:#F59E0B;
+    /* theme tokens (defaults = .theme-default) */
+    --accent:#38BDF8;
+    --bg-main:#040A18;
+    --surface:#0B1428;
+    --border-c:rgba(56,189,248,0.16);
+    --text-main:#E2E8F0;
+    --text-muted:#94A3B8;
+  }
+  /* Derived tokens: declared on body too so they resolve against the ACTIVE theme accent */
+  :root, body{
+    --glow-shadow: 0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent), 0 0 36px -8px color-mix(in srgb,var(--accent) 65%,transparent);
+    --glow-soft: 0 0 28px -14px color-mix(in srgb,var(--accent) 55%,transparent);
+    --text-glow: 0 0 14px color-mix(in srgb,var(--accent) 70%,transparent);
+    /* legacy aliases so existing rules become theme-aware */
+    --cyan:var(--accent); --bg-deep:var(--bg-main); --bg-panel:var(--surface);
+    --border-soft:var(--border-c); --text-dim:var(--text-muted);
   }
   *{ box-sizing:border-box; }
-  html,body{
+  html{ min-height:100%; }
+  body{
     background:
       radial-gradient(circle at 15% 10%, rgba(168,85,247,0.10), transparent 40%),
-      radial-gradient(circle at 85% 0%, rgba(6,182,212,0.12), transparent 45%),
-      var(--bg-deep);
-    color:#E2E8F0;
+      radial-gradient(circle at 85% 0%, color-mix(in srgb,var(--accent) 14%,transparent), transparent 45%),
+      var(--bg-main);
+    color:var(--text-main);
     font-family:'Space Grotesk', system-ui, sans-serif;
     min-height:100vh;
     -webkit-font-smoothing:antialiased;
+    transition: all 0.4s ease-in-out;
   }
+  header{ background: color-mix(in srgb,var(--bg-main) 70%,transparent) !important; transition: all 0.4s ease-in-out; }
   .mono{ font-family:'JetBrains Mono', monospace; }
 
   /* scrollbar */
@@ -48,56 +68,58 @@
   ::-webkit-scrollbar-thumb{ background:rgba(6,182,212,0.35); border-radius:8px; }
 
   .glass{
-    background: linear-gradient(180deg, rgba(15,23,42,0.75), rgba(15,23,42,0.55));
+    background: linear-gradient(180deg, color-mix(in srgb,var(--surface) 82%,transparent), color-mix(in srgb,var(--surface) 58%,transparent));
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border:1px solid var(--border-soft);
     border-radius:20px;
     position:relative;
+    box-shadow: var(--glow-soft);
+    transition: all 0.4s ease-in-out;
   }
   .glass::before{
     content:"";
     position:absolute; inset:0;
     border-radius:20px;
     padding:1px;
-    background:linear-gradient(135deg, rgba(6,182,212,0.35), rgba(168,85,247,0.15) 40%, transparent 70%);
+    background:linear-gradient(135deg, color-mix(in srgb,var(--accent) 45%,transparent), rgba(168,85,247,0.15) 40%, transparent 70%);
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events:none;
   }
 
-  .glow-cyan{ box-shadow: 0 0 0 1px rgba(6,182,212,0.15), 0 0 40px -12px rgba(6,182,212,0.45); }
+  .glow-cyan{ box-shadow: var(--glow-shadow); }
   .glow-purple{ box-shadow: 0 0 0 1px rgba(168,85,247,0.15), 0 0 40px -12px rgba(168,85,247,0.45); }
 
   .field{
-    background: rgba(3,7,18,0.6);
+    background: color-mix(in srgb,var(--bg-main) 75%,transparent);
     border:1px solid var(--border-soft);
     border-radius:12px;
-    color:#E2E8F0;
-    transition: border-color .2s ease, box-shadow .2s ease;
+    color:var(--text-main);
+    transition: all 0.4s ease-in-out;
   }
   .field:focus{
     outline:none;
-    border-color: var(--cyan);
-    box-shadow: 0 0 0 3px rgba(6,182,212,0.18);
+    border-color: var(--accent);
+    box-shadow: var(--glow-shadow);
   }
 
   .btn{
     border-radius:12px;
     font-weight:600;
-    transition: transform .15s ease, box-shadow .15s ease, background .2s ease;
+    transition: all 0.4s ease-in-out;
   }
   .btn:active{ transform: scale(0.97); }
   .btn-primary{
-    background: linear-gradient(135deg, var(--cyan), #0891B2);
+    background: linear-gradient(135deg, var(--accent), color-mix(in srgb,var(--accent) 65%,black));
     color:#03151A;
   }
-  .btn-primary:hover{ box-shadow: 0 0 26px -6px rgba(6,182,212,0.7); }
+  .btn-primary:hover{ box-shadow: 0 0 28px -4px color-mix(in srgb,var(--accent) 80%,transparent); }
   .btn-ghost{
     background: rgba(148,163,184,0.08);
     border:1px solid var(--border-soft);
-    color:#E2E8F0;
+    color:var(--text-main);
   }
   .btn-ghost:hover{ background: rgba(148,163,184,0.15); }
   .btn-purple{
@@ -198,9 +220,64 @@
     .strength-fill::after{ animation:none; }
     .fade-in{ animation:none; }
   }
+
+  /* ================= SECURITY-DRIVEN THEMES (toggled on <body> by JS) ================= */
+  .theme-default{ --accent:#38BDF8; --bg-main:#040A18; --surface:#0B1428; --border-c:rgba(56,189,248,0.16); --text-main:#E2E8F0; --text-muted:#94A3B8; }
+  .theme-weak   { --accent:#FF2E63; --bg-main:#12030A; --surface:#1E0812; --border-c:rgba(255,46,99,0.34);  --text-main:#FFE4EA; --text-muted:#C79AA6; }
+  .theme-medium { --accent:#FFB020; --bg-main:#130C02; --surface:#1F1405; --border-c:rgba(255,176,32,0.32); --text-main:#FFF3DC; --text-muted:#C9AE83; }
+  .theme-strong { --accent:#00F5A0; --bg-main:#021310; --surface:#05201A; --border-c:rgba(0,245,160,0.30);  --text-main:#DCFFF2; --text-muted:#8FBFAE; }
+
+  /* neon text (follows the active accent; rating/label use their own inline colour) */
+  h1 span, #crack-time, #stat-entropy{ text-shadow: var(--text-glow); transition: all 0.4s ease-in-out; }
+  #stat-rating, #strength-label{ text-shadow: 0 0 12px currentColor; }
+  .strength-fill{ box-shadow: 0 0 14px -2px currentColor; }
+
+  /* non-default themes: every input carries a faint neon edge */
+  .theme-weak .field, .theme-medium .field, .theme-strong .field{
+    border-color: color-mix(in srgb,var(--accent) 55%,transparent);
+    box-shadow: 0 0 14px -4px color-mix(in srgb,var(--accent) 55%,transparent);
+  }
+
+  /* WEAK: danger vignette + pulsing red input */
+  body::after{
+    content:""; position:fixed; inset:0; z-index:30; pointer-events:none; opacity:0;
+    box-shadow: inset 0 0 140px -20px color-mix(in srgb,var(--accent) 55%,transparent);
+    transition: opacity 0.4s ease-in-out;
+  }
+  .theme-weak::after{ opacity:1; animation: alertPulse 2.4s ease-in-out infinite; }
+  .theme-weak #pw-input{ border-color:var(--accent); animation: fieldPulse 1.8s ease-in-out infinite; }
+  @keyframes alertPulse{ 0%,100%{ opacity:.3; } 50%{ opacity:1; } }
+  @keyframes fieldPulse{
+    0%,100%{ box-shadow: 0 0 6px 0 color-mix(in srgb,var(--accent) 40%,transparent); }
+    50%{ box-shadow: 0 0 22px 3px color-mix(in srgb,var(--accent) 80%,transparent); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .theme-weak::after, .theme-weak #pw-input{ animation:none; }
+  }
+  /* ================= FORENSIC LAB ================= */
+  select.field{ color-scheme:dark; cursor:pointer; }
+  .term{ background:#010409; border:1px solid var(--border-soft); border-radius:14px; box-shadow: inset 0 0 40px rgba(0,0,0,.8), var(--glow-soft); overflow:hidden; transition:all .4s ease-in-out; }
+  .term-bar{ display:flex; align-items:center; gap:6px; padding:8px 12px; border-bottom:1px solid var(--border-soft); background:rgba(148,163,184,.05); }
+  .term-bar i{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+  .rain{ font-family:'JetBrains Mono',monospace; font-size:.8rem; line-height:1.55; height:214px; padding:10px 14px; overflow:hidden; color:#64748B; white-space:pre; }
+  .rain b{ color:var(--accent); text-shadow:var(--text-glow); font-weight:700; }
+  .rain .h{ color:#334155; }
+  .term.hit{ border-color:var(--crimson); box-shadow: inset 0 0 40px rgba(239,68,68,.25), 0 0 34px -8px rgba(239,68,68,.7); }
+  .term.hit .rain b{ color:var(--crimson); text-shadow:0 0 12px rgba(239,68,68,.8); }
+  .lab-res{ border-radius:14px; padding:16px 18px; border:1px solid currentColor; }
+  .lab-res.bad{ color:var(--crimson); background:rgba(239,68,68,.08); box-shadow:0 0 30px -10px rgba(239,68,68,.6); }
+  .lab-res.good{ color:var(--emerald); background:rgba(16,185,129,.08); box-shadow:0 0 30px -10px rgba(16,185,129,.6); }
+  .lab-res h4{ font-weight:700; font-size:1.15rem; letter-spacing:.06em; margin-bottom:8px; }
+  .lab-res .row{ display:flex; justify-content:space-between; gap:12px; font-size:.8rem; padding:3px 0; border-bottom:1px dashed rgba(148,163,184,.15); color:#CBD5E1; }
+  .lab-res .row span:last-child{ font-family:'JetBrains Mono',monospace; text-align:right; color:currentColor; }
+  .rep h5{ font-size:.72rem; text-transform:uppercase; letter-spacing:.1em; color:var(--accent); font-weight:700; margin-bottom:6px; }
+  .rep p{ font-size:.78rem; color:var(--text-muted); line-height:1.5; }
+  .rep .eq{ font-family:'JetBrains Mono',monospace; font-size:.78rem; color:var(--text-main); background:rgba(148,163,184,.07); border-left:2px solid var(--accent); padding:8px 10px; border-radius:6px; margin:6px 0; overflow-x:auto; }
+  .rep .hw{ display:flex; justify-content:space-between; font-size:.74rem; padding:2px 6px; border-radius:6px; color:var(--text-muted); }
+  .rep .hw.on{ background:color-mix(in srgb,var(--accent) 16%,transparent); color:var(--text-main); }
 </style>
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen theme-default">
 
 <!-- ================= HEADER ================= -->
 <header class="border-b border-white/5 sticky top-0 z-40 backdrop-blur-md bg-[#030712]/70">
@@ -423,6 +500,49 @@
     </div>
   </section>
 
+  <!-- ============ FORENSIC LAB ============ -->
+  <section class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+    <div class="glass glow-cyan p-6 sm:p-8 lg:col-span-3 fade-in">
+      <div class="flex items-center gap-3 mb-6">
+        <i class="fa-solid fa-terminal" style="color:var(--accent);"></i>
+        <h3 class="font-semibold text-lg">Forensic Cracking Lab</h3>
+        <span class="badge ml-auto" style="color:var(--accent);">SIMULATION</span>
+      </div>
+      <label class="section-title block mb-2">Target password</label>
+      <input id="lab-target" type="text" maxlength="32" placeholder="e.g. Sunshine2024!" autocomplete="off" spellcheck="false" class="field w-full px-4 py-3 mono text-sm mb-4">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+        <div><label class="section-title block mb-1">Attack type</label>
+          <select id="lab-attack" class="field w-full px-3 py-2 text-sm"><option value="brute">1. Brute Force</option><option value="dict">2. Dictionary Attack</option></select></div>
+        <div><label class="section-title block mb-1">Attacker capability</label>
+          <select id="lab-hw" class="field w-full px-3 py-2 text-sm"><option value="cpu">1. High-end PC (CPU)</option><option value="gpu" selected>2. Gaming GPU (RTX 3080)</option><option value="botnet">3. Botnet Cluster (AWS-scale)</option></select></div>
+        <div><label class="section-title block mb-1">Target hash type</label>
+          <select id="lab-hash" class="field w-full px-3 py-2 text-sm"><option value="md5">1. Plain Text (MD5)</option><option value="sha256">2. Secure Hash (SHA-256)</option><option value="bcrypt">3. Key Stretched (bcrypt Cost 12)</option></select></div>
+      </div>
+      <button id="lab-start" class="btn btn-primary w-full py-3 text-sm mb-5"><i class="fa-solid fa-play mr-2"></i>Start Forensic Scan</button>
+
+      <div class="term mb-4">
+        <div class="term-bar"><i style="background:#EF4444"></i><i style="background:#F59E0B"></i><i style="background:#10B981"></i>
+          <span id="lab-cmd" class="mono text-[11px] text-slate-500 ml-2 truncate">root@forensic-lab:~# awaiting target…</span></div>
+        <div id="lab-rain" class="rain">// Enter a target password and press Start Forensic Scan.</div>
+      </div>
+      <div class="flex items-center justify-between mb-1"><span class="section-title">Scan progress</span><span id="lab-scale" class="mono text-[11px] text-slate-500"></span></div>
+      <div class="strength-track mb-5"><div id="lab-bar" class="strength-fill" style="background:var(--accent);"></div></div>
+
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <div class="glass !rounded-xl p-3"><p class="text-[10px] text-slate-400 uppercase tracking-wide">Current guesses</p><p id="c-guess" class="text-base font-bold mono">0</p></div>
+        <div class="glass !rounded-xl p-3"><p class="text-[10px] text-slate-400 uppercase tracking-wide">Speed</p><p id="c-speed" class="text-base font-bold mono">0 H/s</p></div>
+        <div class="glass !rounded-xl p-3"><p class="text-[10px] text-slate-400 uppercase tracking-wide">Elapsed (max 2 min)</p><p id="c-elapsed" class="text-base font-bold mono">0.00 s</p></div>
+        <div class="glass !rounded-xl p-3"><p class="text-[10px] text-slate-400 uppercase tracking-wide">ETA (worst case)</p><p id="c-eta" class="text-sm font-bold mono">—</p></div>
+      </div>
+      <div id="lab-result"></div>
+    </div>
+
+    <div class="glass p-6 sm:p-8 lg:col-span-2 fade-in rep">
+      <div class="flex items-center gap-3 mb-5"><i class="fa-solid fa-flask" style="color:var(--accent);"></i><h3 class="font-semibold text-lg" style="color:var(--text-main);">Cryptographic Intelligence Report</h3></div>
+      <div id="lab-report" class="space-y-5"></div>
+    </div>
+  </section>
+
   <footer class="text-center text-xs text-slate-500 pt-6 pb-4 space-y-1">
     <p>CyberPass Web — All computation happens locally in your browser. No network requests, no telemetry.</p>
     <p>Developed & Maintained by <span class="text-cyan-400 font-medium">Moamal Riyadh</span> © 2026</p>
@@ -600,6 +720,25 @@
     ratingEl.style.color = color;
   }
 
+  /* ---- Security-Driven UX: reactive theme on <body> ---- */
+  var THEME_CLASSES = ['theme-default','theme-weak','theme-medium','theme-strong'];
+  function applySecurityTheme(pw, entropy){
+    var theme;
+    if(!pw.length){
+      theme = 'theme-default';
+    } else if(pw.length < 12 || BREACH_SET.has(pw.toLowerCase()) || entropy < 40){
+      theme = 'theme-weak';
+    } else if(entropy <= 75){
+      theme = 'theme-medium';
+    } else {
+      theme = 'theme-strong';
+    }
+    var cl = document.body.classList;
+    if(cl.contains(theme)) return;
+    THEME_CLASSES.forEach(function(t){ cl.remove(t); });
+    cl.add(theme);
+  }
+
   function analyzePassword(){
     var pw = $('pw-input').value;
     var entropy = calcEntropy(pw);
@@ -610,6 +749,7 @@
     $('stat-pool').textContent = r;
 
     updateStrengthBar(entropy, pw);
+    applySecurityTheme(pw, entropy);
 
     var secs = crackSeconds(entropy);
     $('crack-time').textContent = pw.length ? formatDuration(secs) : "Instant";
@@ -905,6 +1045,168 @@
 
   tick();
   setInterval(tick, 1000);
+
+  /* ============================================================
+     FORENSIC CRACKING LAB (100% client-side simulation)
+  ============================================================ */
+  var GPS_TABLE = { // guesses / second (hashcat-class benchmarks, rounded)
+    cpu:   { md5:2e9,    sha256:4e8,    bcrypt:70 },
+    gpu:   { md5:6.5e10, sha256:8.9e9,  bcrypt:220 },
+    botnet:{ md5:6.5e13, sha256:8.9e12, bcrypt:2.2e5 }   // ~1000 GPUs, linear scaling
+  };
+  var HW_NAME = { cpu:'High-end CPU (16 cores)', gpu:'Gaming GPU (RTX 3080)', botnet:'Botnet cluster (~1000 GPUs)' };
+  var HASH_NAME = { md5:'MD5', sha256:'SHA-256', bcrypt:'bcrypt (cost 12)' };
+  var HC_MODE = { md5:0, sha256:1400, bcrypt:3200 };
+  var DICT_BASE = 14344391, DICT_RULES = 100, SIM_WINDOW = 120, UNIVERSE_S = 4.35e17;
+  var WL = BREACH_DICTIONARY.concat(COMMON_WORDS_FOR_DICT_CHECK);
+  var LEET = {'0':'o','1':'i','3':'e','4':'a','5':'s','7':'t','@':'a','$':'s'};
+  var RAIN_CS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{};:,.<>?';
+  var lab = null, labRaf = 0;
+
+  function sci(n){
+    if(!isFinite(n)) return '∞';
+    if(n < 1e6) return Math.round(n).toLocaleString('en-US');
+    var e = Math.floor(Math.log10(n));
+    return (n/Math.pow(10,e)).toFixed(2) + ' × 10<sup>' + e + '</sup>';
+  }
+  function fmtSim(t){ return t < 60 ? t.toFixed(t < 1 ? 4 : 2) + ' s' : Math.floor(t/60) + 'm ' + Math.round(t%60) + 's'; }
+  function esc(c){ return c==='<' ? '&lt;' : c==='>' ? '&gt;' : c==='&' ? '&amp;' : c; }
+  function rnd(n){ return Math.floor(Math.random()*n); }
+
+  function charsetFor(pw){
+    return (/[a-z]/.test(pw)?'abcdefghijklmnopqrstuvwxyz':'') + (/[A-Z]/.test(pw)?'ABCDEFGHIJKLMNOPQRSTUVWXYZ':'') +
+           (/[0-9]/.test(pw)?'0123456789':'') + (/[^a-zA-Z0-9]/.test(pw)?'!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~':'');
+  }
+
+  // Where in the attacker's search order does the password sit?  -> {total, found, rank, R, L}
+  function labSpace(pw, atk){
+    if(atk === 'dict'){
+      var low = pw.toLowerCase(), idx = WL.indexOf(low), mut = 0;
+      if(idx < 0){
+        var norm = low.replace(/[^a-z]+$/,'').replace(/[013457@$]/g, function(c){ return LEET[c]; });
+        idx = WL.indexOf(norm);
+        var sum = 0; for(var i=0;i<pw.length;i++) sum += pw.charCodeAt(i);
+        mut = 1 + (sum % (DICT_RULES-1));
+      }
+      return { total:DICT_BASE*DICT_RULES, found:idx>=0, rank:idx*DICT_RULES+mut+1 };
+    }
+    var cs = charsetFor(pw), R = cs.length, L = pw.length, total = 0, pow = 1, shorter = 0n, RB = BigInt(R), pb = 1n, v = 0n;
+    for(var k=1;k<=L;k++){ pow *= R; total += pow; }
+    for(var k2=1;k2<L;k2++){ pb *= RB; shorter += pb; }
+    for(var j=0;j<L;j++) v = v*RB + BigInt(Math.max(0, cs.indexOf(pw[j])));
+    return { total:total, found:true, rank:Number(shorter+v+1n), R:R, L:L };
+  }
+
+  function selVals(){ return { atk:$('lab-attack').value, hw:$('lab-hw').value, hs:$('lab-hash').value }; }
+
+  function renderReport(){
+    var v = selVals(), pw = $('lab-target').value, gps = GPS_TABLE[v.hw][v.hs], sp = pw ? labSpace(pw, v.atk) : null, eq, H;
+    if(v.atk === 'dict'){
+      H = DICT_BASE*DICT_RULES;
+      eq = 'H = D × M = ' + DICT_BASE.toLocaleString('en-US') + ' × ' + DICT_RULES + ' = ' + sci(H);
+    } else if(sp){
+      H = sp.total; eq = 'H = R<sup>L</sup> = ' + sp.R + '<sup>' + sp.L + '</sup> = ' + sci(H);
+    } else { eq = 'H = R<sup>L</sup> = (charset size)<sup>(length)</sup>'; }
+    var tw = H ? H/gps : 0;
+    var ratio = GPS_TABLE[v.hw].md5 / GPS_TABLE[v.hw].bcrypt;
+    var hashTxt = {
+      md5:'MD5 is one cheap 512-bit compression pass, so silicon can evaluate billions per second. It was built for speed, which is exactly what an attacker wants.',
+      sha256:'SHA-256 runs 64 rounds on 32-bit words, roughly ' + sci(GPS_TABLE[v.hw].md5/GPS_TABLE[v.hw].sha256) + '× slower than MD5 on this hardware. Still a fast hash, so still cheap to brute-force.',
+      bcrypt:'bcrypt at cost 12 repeats an expensive Blowfish key-schedule 2<sup>12</sup> = 4,096 times and needs a 4 KB S-box table per guess, which starves GPU caches. Here MD5 is ' + sci(ratio) + '× faster than bcrypt: far beyond the "10,000×" rule of thumb, and each +1 cost doubles the work.'
+    }[v.hs];
+    var hwTxt = { cpu:'A CPU has ~16 powerful cores: great at sequential work, tiny parallelism.',
+      gpu:'An RTX 3080 has 8,704 CUDA cores. Guesses are independent, so the workload is embarrassingly parallel and scales almost linearly with cores.',
+      botnet:'Thousands of GPUs on rented cloud nodes: speed multiplies by the node count. Only a slow, memory-hungry hash such as bcrypt blunts this.' }[v.hw];
+    var rows = ['cpu','gpu','botnet'].map(function(h){
+      return '<div class="hw' + (h===v.hw?' on':'') + '"><span>' + HW_NAME[h] + '</span><span class="mono">' + sci(GPS_TABLE[h][v.hs]) + ' H/s</span></div>';
+    }).join('');
+    $('lab-report').innerHTML =
+      '<div><h5>Combinations (H)</h5><div class="eq">' + eq + '</div><div class="eq">T<sub>max</sub> = H ÷ GPS = ' + (H?sci(H):'H') + ' ÷ ' + sci(gps) + ' = <b>' + (H?formatDuration(tw):'—') + '</b></div>' +
+      '<p>Brute force must try every string up to length L. A dictionary attack only tries D known words × M mutation rules (leet-speak, suffixes), so it wins instantly against predictable passwords and never against random ones.</p></div>' +
+      '<div><h5>Hash function cost — ' + HASH_NAME[v.hs] + '</h5><p>' + hashTxt + '</p></div>' +
+      '<div><h5>Attacker hardware impact</h5><p>' + hwTxt + '</p><div class="mt-2">' + rows + '</div></div>';
+  }
+
+  function stopLab(){
+    if(labRaf) cancelAnimationFrame(labRaf); labRaf = 0; lab = null;
+    var b = $('lab-start'); b.innerHTML = '<i class="fa-solid fa-play mr-2"></i>Start Forensic Scan';
+  }
+
+  function drawRain(L, lockP, hit){
+    var out = '';
+    for(var r=0;r<11;r++){
+      var line = '<span class="h">' + (Math.random().toString(16).slice(2,10)) + ' » </span>';
+      for(var i=0;i<L.pw.length;i++){
+        line += (hit || Math.random() < lockP) ? '<b>' + esc(L.pw[i]) + '</b>' : esc(RAIN_CS[rnd(RAIN_CS.length)]);
+      }
+      out += line + '\n';
+    }
+    $('lab-rain').innerHTML = out;
+  }
+
+  function labFrame(now){
+    var L = lab; if(!L) return;
+    var w = (now - L.t0)/1000, done = w >= L.wall;
+    var sim = done ? L.simEnd : w*L.scale, p = Math.min(1, w/L.wall);
+    var g = Math.min(L.gps*sim, L.cracked ? L.sp.rank : L.sp.total);
+    if(done && L.cracked) g = L.sp.rank;
+    $('c-guess').innerHTML = sci(g) + ' <span class="text-[10px] text-slate-500">/ ' + sci(L.sp.total) + '</span>';
+    $('c-speed').innerHTML = sci(L.gps) + ' H/s';
+    $('c-elapsed').textContent = fmtSim(sim);
+    $('c-eta').textContent = (done && L.cracked) ? 'Found' : formatDuration((L.sp.total - g)/L.gps);
+    $('lab-bar').style.width = (p*100).toFixed(1) + '%';
+    var interval = 140 - 122*p;                       // rain accelerates
+    if(now - L.last > interval || done){
+      L.last = now;
+      drawRain(L, L.cracked ? Math.pow(p, 2.2) : Math.min(0.03, g/L.sp.total), done && L.cracked);
+    }
+    if(done){ finishLab(L, g, sim); return; }
+    labRaf = requestAnimationFrame(labFrame);
+  }
+
+  function row(a,b){ return '<div class="row"><span>' + a + '</span><span>' + b + '</span></div>'; }
+
+  function finishLab(L, g, sim){
+    var v = L.v, box = $('lab-result'), tExhaust = L.sp.total/L.gps;
+    stopLab();
+    if(L.cracked){
+      $('lab-rain').parentNode.classList.add('hit');
+      box.innerHTML = '<div class="lab-res bad fade-in"><h4><i class="fa-solid fa-skull-crossbones mr-2"></i>CRACKED</h4>' +
+        row('Recovered password', L.pw.replace(/</g,'&lt;')) + row('Found at guess #', sci(L.sp.rank)) + row('Time to crack', fmtSim(sim)) +
+        row('Attack', v.atk==='dict' ? 'Dictionary (' + sci(L.sp.total) + ' candidates)' : 'Brute force') + row('Hash / hardware', HASH_NAME[v.hs] + ' · ' + HW_NAME[v.hw]) +
+        '<p class="text-xs mt-3" style="color:#FCA5A5;">' + (v.atk==='dict' ? 'This password is predictable: it is a known word or a trivial mutation of one.' : 'Search space too small for this hardware.') + ' Lengthen it, randomize it, and store it with a slow hash such as bcrypt.</p></div>';
+    } else {
+      var cov = g/L.sp.total*100;
+      box.innerHTML = '<div class="lab-res good fade-in"><h4><i class="fa-solid fa-shield-halved mr-2"></i>RESISTANT</h4>' +
+        row('Search space (H)', sci(L.sp.total)) + row('Guesses in ' + SIM_WINDOW + ' s', sci(g)) +
+        row('Keyspace covered', cov < 0.001 ? cov.toExponential(2) + ' %' : cov.toFixed(3) + ' %') +
+        row('Time to exhaust', formatDuration(tExhaust)) + row('Security factor', sci(tExhaust/SIM_WINDOW) + '× the attack window') +
+        row('vs. age of universe', tExhaust > UNIVERSE_S ? sci(tExhaust/UNIVERSE_S) + '×' : (tExhaust/UNIVERSE_S*100).toExponential(2) + ' %') +
+        '<p class="text-xs mt-3" style="color:#6EE7B7;">' + (L.sp.found ? 'Not uncrackable: at this speed it would fall in about ' + formatDuration(L.sp.rank/L.gps) + '. Resistant only within the ' + SIM_WINDOW + ' s window.' : (v.atk==='dict' ? 'Not in the wordlist or its mutations. A dictionary attack fails; only brute force remains.' : 'Beyond reach of this attacker.')) + '</p></div>';
+    }
+  }
+
+  function startLab(){
+    if(lab){ stopLab(); return; }
+    var pw = $('lab-target').value;
+    if(!pw){ showToast('Enter a target password first'); return; }
+    var v = selVals(), gps = GPS_TABLE[v.hw][v.hs], sp = labSpace(pw, v.atk);
+    var tCrack = sp.found ? sp.rank/gps : Infinity, cracked = tCrack <= SIM_WINDOW;
+    var simEnd = Math.min(tCrack, SIM_WINDOW), wall = Math.min(30, Math.max(3, simEnd));   // 3-30 s of real time
+    lab = { pw:pw, v:v, gps:gps, sp:sp, cracked:cracked, simEnd:simEnd, wall:wall, scale:simEnd/wall, t0:performance.now(), last:0 };
+    $('lab-rain').parentNode.classList.remove('hit');
+    $('lab-result').innerHTML = '';
+    $('lab-cmd').textContent = 'root@forensic-lab:~# hashcat -m ' + HC_MODE[v.hs] + ' -a ' + (v.atk==='dict'?0:3) + ' target.hash' + (v.atk==='dict'?' rockyou.txt -r rules':' ?a?a?a…');
+    $('lab-scale').textContent = lab.scale < 0.999 ? 'slow-motion ×' + lab.scale.toPrecision(2) : lab.scale > 1.001 ? 'time-lapse ×' + lab.scale.toFixed(1) : 'real time';
+    $('lab-start').innerHTML = '<i class="fa-solid fa-stop mr-2"></i>Abort Scan';
+    renderReport();
+    labRaf = requestAnimationFrame(labFrame);
+  }
+
+  $('lab-start').addEventListener('click', startLab);
+  ['lab-attack','lab-hw','lab-hash'].forEach(function(id){ $(id).addEventListener('change', function(){ if(!lab) renderReport(); }); });
+  $('lab-target').addEventListener('input', function(){ if(!lab) renderReport(); });
+  renderReport();
 
 })();
 </script>
