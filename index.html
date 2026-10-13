@@ -12,10 +12,6 @@
 <!-- Google Font -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- CryptoJS (HMAC-SHA1 primitive for TOTP) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
-<!-- QRCode generator -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
   /* Registered so theme colours interpolate smoothly (gradients & glows included) */
@@ -175,20 +171,6 @@
   }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
 
-  .ring-wrap{ position:relative; width:96px; height:96px; }
-  .ring-wrap svg{ transform: rotate(-90deg); }
-  .ring-bg{ fill:none; stroke:rgba(148,163,184,0.15); stroke-width:6; }
-  .ring-fg{ fill:none; stroke:var(--cyan); stroke-width:6; stroke-linecap:round; transition: stroke-dashoffset 1s linear, stroke .3s ease; }
-
-  .totp-digits{
-    font-family:'JetBrains Mono', monospace;
-    letter-spacing:0.35em;
-    font-size:2.4rem;
-    font-weight:700;
-    background: linear-gradient(90deg, var(--cyan), var(--purple));
-    -webkit-background-clip:text; background-clip:text; color:transparent;
-  }
-
   .check-item{
     display:flex; align-items:center; gap:8px;
     font-size:0.82rem; color:var(--text-dim);
@@ -209,9 +191,6 @@
     border:2px solid #03151A;
   }
   input[type="checkbox"]{ accent-color: var(--cyan); }
-
-  #qrcode-box{ background:#fff; padding:10px; border-radius:14px; display:inline-block; }
-  #qrcode-box img, #qrcode-box canvas{ display:block; border-radius:6px; }
 
   .fade-in{ animation: fadeIn .5s ease both; }
   @keyframes fadeIn{ from{ opacity:0; transform:translateY(6px);} to{ opacity:1; transform:translateY(0);} }
@@ -275,6 +254,34 @@
   .rep .eq{ font-family:'JetBrains Mono',monospace; font-size:.78rem; color:var(--text-main); background:rgba(148,163,184,.07); border-left:2px solid var(--accent); padding:8px 10px; border-radius:6px; margin:6px 0; overflow-x:auto; }
   .rep .hw{ display:flex; justify-content:space-between; font-size:.74rem; padding:2px 6px; border-radius:6px; color:var(--text-muted); }
   .rep .hw.on{ background:color-mix(in srgb,var(--accent) 16%,transparent); color:var(--text-main); }
+
+  /* ================= URL & TYPOSQUATTING ANALYZER ================= */
+  .ua-sample{ font-size:.7rem; padding:4px 11px; border-radius:999px; border:1px dashed var(--border-soft); color:var(--text-muted); background:transparent; cursor:pointer; transition:all .3s ease-in-out; }
+  .ua-sample:hover{ color:var(--text-main); border-color:var(--accent); background:color-mix(in srgb,var(--accent) 10%,transparent); }
+  .ua-empty{ text-align:center; padding:28px 16px; border:1px dashed var(--border-soft); border-radius:14px; color:var(--text-muted); font-size:.82rem; line-height:1.6; }
+  .ua-empty i{ font-size:1.6rem; color:var(--accent); margin-bottom:10px; display:block; opacity:.8; }
+  .ua-error{ padding:14px 16px; border-radius:12px; border:1px solid var(--crimson); background:rgba(239,68,68,.08); color:#FCA5A5; font-size:.85rem; }
+  .ua-verdict{ display:flex; flex-wrap:wrap; align-items:center; gap:20px; padding:16px 18px; border-radius:16px; border:1px solid var(--ua); background:color-mix(in srgb,var(--ua) 9%,transparent); box-shadow:0 0 34px -12px var(--ua); margin-bottom:18px; }
+  .ua-ring{ position:relative; width:96px; height:96px; flex:none; }
+  .ua-ring svg{ transform:rotate(-90deg); }
+  .ua-ring-bg{ fill:none; stroke:rgba(148,163,184,.15); stroke-width:6; }
+  .ua-ring-fg{ fill:none; stroke:var(--ua); stroke-width:6; stroke-linecap:round; transition:stroke-dashoffset .9s ease-out; filter:drop-shadow(0 0 5px var(--ua)); }
+  .ua-ring-num{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1.5rem; line-height:1; color:var(--ua); }
+  .ua-ring-num small{ font-size:.58rem; letter-spacing:.08em; color:var(--text-muted); font-weight:500; margin-top:3px; }
+  .ua-level{ font-weight:700; font-size:1.35rem; letter-spacing:.08em; color:var(--ua); text-shadow:0 0 12px var(--ua); }
+  .ua-sum{ font-size:.82rem; color:var(--text-muted); line-height:1.5; margin-top:2px; max-width:34rem; }
+  .ua-anat{ display:grid; grid-template-columns:auto 1fr; gap:7px 16px; font-size:.78rem; padding:12px 14px; border-radius:12px; background:rgba(148,163,184,.06); border:1px solid var(--border-soft); margin-bottom:18px; }
+  .ua-k{ color:var(--text-muted); text-transform:uppercase; letter-spacing:.08em; font-size:.66rem; padding-top:3px; white-space:nowrap; }
+  .ua-v{ font-family:'JetBrains Mono',monospace; color:var(--text-main); word-break:break-all; direction:ltr; text-align:left; }
+  .ua-v b{ color:var(--accent); text-shadow:var(--text-glow); }
+  .ua-find{ --sev:#94A3B8; display:flex; gap:12px; align-items:flex-start; padding:10px 12px; border-radius:12px; border-left:3px solid var(--sev); background:color-mix(in srgb,var(--sev) 8%,transparent); margin-bottom:8px; }
+  .ua-find.sev-critical{ --sev:#EF4444; } .ua-find.sev-high{ --sev:#FB923C; } .ua-find.sev-medium{ --sev:#F59E0B; }
+  .ua-find.sev-low{ --sev:#38BDF8; } .ua-find.sev-info{ --sev:#94A3B8; } .ua-find.sev-ok{ --sev:#10B981; }
+  .ua-sev{ flex:none; min-width:66px; text-align:center; font-size:.6rem; font-weight:700; letter-spacing:.08em; padding:3px 6px; border-radius:6px; color:var(--sev); border:1px solid var(--sev); }
+  .ua-ft{ font-size:.82rem; font-weight:600; color:var(--text-main); }
+  .ua-pts{ font-size:.68rem; color:var(--sev); margin-left:6px; }
+  .ua-fd{ font-size:.76rem; color:var(--text-muted); line-height:1.5; margin-top:2px; word-break:break-word; }
+  @media (prefers-reduced-motion: reduce){ .ua-ring-fg{ transition:none; } }
 </style>
 </head>
 <body class="min-h-screen theme-default">
@@ -406,7 +413,7 @@
     </div>
   </section>
 
-  <!-- ============ ROW 2: GENERATOR + TOTP ============ -->
+  <!-- ============ ROW 2: GENERATOR + URL ANALYZER ============ -->
   <section class="grid grid-cols-1 lg:grid-cols-5 gap-6">
 
     <!-- Generator -->
@@ -459,43 +466,38 @@
       <button id="gen-generate" class="btn btn-purple w-full py-3 text-sm"><i class="fa-solid fa-bolt mr-2"></i>Generate</button>
     </div>
 
-    <!-- TOTP Engine -->
-    <div class="glass p-6 sm:p-8 lg:col-span-3 fade-in">
+    <!-- URL & Typosquatting Intelligence Analyzer -->
+    <div class="glass glow-cyan p-6 sm:p-8 lg:col-span-3 fade-in">
       <div class="flex items-center gap-3 mb-6">
-        <i class="fa-solid fa-satellite-dish" style="color:var(--emerald);"></i>
-        <h3 class="font-semibold text-lg">Interactive TOTP &amp; Dynamic Pass Engine</h3>
-        <span class="badge ml-auto" style="color:var(--emerald);">RFC 6238</span>
+        <i class="fa-solid fa-link" style="color:var(--accent);"></i>
+        <h3 class="font-semibold text-lg">URL &amp; Typosquatting Intelligence Analyzer</h3>
+        <span class="badge ml-auto" style="color:var(--emerald);">LOCAL ONLY</span>
       </div>
 
-      <label class="section-title block mb-2">Base32 Secret Key</label>
-      <div class="flex gap-2 mb-6">
-        <input id="totp-secret" type="text" value="JBSWY3DPEHPK3PXP" spellcheck="false"
-          class="field flex-1 px-4 py-3 mono text-sm tracking-wider" style="color:var(--emerald);">
-        <button id="totp-random" class="btn btn-ghost px-4 text-sm" title="Generate Random Secret"><i class="fa-solid fa-dice"></i></button>
+      <label class="section-title block mb-2" for="url-input">Suspicious link or domain</label>
+      <div class="flex gap-2 mb-3">
+        <input id="url-input" type="text" dir="ltr" maxlength="2048" autocomplete="off" autocapitalize="off" spellcheck="false"
+          placeholder="e.g. paypa1-secure-login.com/verify"
+          class="field flex-1 min-w-0 px-4 py-3 mono text-sm">
+        <button id="url-analyze" class="btn btn-primary px-5 text-sm whitespace-nowrap"><i class="fa-solid fa-magnifying-glass mr-2"></i>Analyze</button>
+        <button id="url-clear" class="btn btn-ghost px-4 text-sm" title="Clear"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-6 items-center mb-6">
-        <div class="flex items-center gap-6">
-          <div class="ring-wrap">
-            <svg viewBox="0 0 100 100" width="96" height="96">
-              <circle class="ring-bg" cx="50" cy="50" r="42"></circle>
-              <circle id="ring-fg" class="ring-fg" cx="50" cy="50" r="42" stroke-dasharray="263.9" stroke-dashoffset="0"></circle>
-            </svg>
-            <div class="absolute inset-0 flex items-center justify-center">
-              <span id="totp-seconds" class="mono font-bold text-lg">30</span>
-            </div>
-          </div>
-          <div>
-            <p class="section-title mb-1">Current Code</p>
-            <p id="totp-code" class="totp-digits">------</p>
-          </div>
-        </div>
-        <div id="qrcode-box"></div>
+      <div id="url-samples" class="flex flex-wrap items-center gap-2 mb-5">
+        <span class="section-title">Try:</span>
+        <button type="button" class="ua-sample mono" data-sample="paypa1-secure-login.xyz/verify">typosquat</button>
+        <button type="button" class="ua-sample mono" data-sample="https://google.com@evil-site.top/login">@ trick</button>
+        <button type="button" class="ua-sample mono" data-sample="http://192.168.0.1:8080/update">IP host</button>
+        <button type="button" class="ua-sample mono" data-sample="xn--pple-43d.com">homograph</button>
+        <button type="button" class="ua-sample mono" data-sample="paypal.com.account-verify.security.example.net">subdomains</button>
+        <button type="button" class="ua-sample mono" data-sample="github.com">legit</button>
       </div>
 
-      <div class="text-xs text-slate-500 flex items-center gap-2">
+      <div id="url-report" aria-live="polite"></div>
+
+      <div class="text-xs text-slate-500 flex items-center gap-2 mt-5">
         <i class="fa-solid fa-circle-info"></i>
-        <span>Scan the QR with Google Authenticator / Authy, or enter the secret manually. Code refreshes every 30 seconds using pure HMAC-SHA1.</span>
+        <span>The link is parsed and scored entirely in your browser with built-in heuristics. It is never opened, fetched or sent anywhere. A low score is not proof of safety.</span>
       </div>
     </div>
   </section>
@@ -910,141 +912,408 @@
   $('gen-output').value = generatePassword();
 
   /* ============================================================
-     TOTP ENGINE (RFC 6238) — pure HMAC-SHA1 via CryptoJS
+     URL & TYPOSQUATTING INTELLIGENCE ANALYZER
+     100% local: the URL is parsed and scored, never opened or fetched.
   ============================================================ */
-  var BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  (function(){
+    /* ---------- Knowledge bases (all offline) ---------- */
+    var BRAND_SRC = {
+      google:'google.com,gmail.com,youtube.com', paypal:'paypal.com', github:'github.com',
+      microsoft:'microsoft.com,live.com,office.com,outlook.com,microsoftonline.com',
+      binance:'binance.com,binance.us', apple:'apple.com,icloud.com', amazon:'amazon.com',
+      facebook:'facebook.com,fb.com', instagram:'instagram.com', netflix:'netflix.com',
+      whatsapp:'whatsapp.com', telegram:'telegram.org,t.me', linkedin:'linkedin.com',
+      twitter:'twitter.com,x.com', coinbase:'coinbase.com', metamask:'metamask.io',
+      dropbox:'dropbox.com', icloud:'icloud.com', outlook:'outlook.com', youtube:'youtube.com',
+      steam:'steampowered.com,steamcommunity.com', discord:'discord.com,discord.gg',
+      spotify:'spotify.com', tiktok:'tiktok.com', yahoo:'yahoo.com', ebay:'ebay.com',
+      kucoin:'kucoin.com', bybit:'bybit.com', okx:'okx.com', trustwallet:'trustwallet.com',
+      blockchain:'blockchain.com'
+    };
+    var BRANDS = Object.keys(BRAND_SRC).map(function(n){ return { name:n, official:BRAND_SRC[n].split(',') }; });
 
-  function base32ToWordArray(base32){
-    var clean = base32.toUpperCase().replace(/[^A-Z2-7]/g, '');
-    if(!clean.length) return null;
-    var bits = '';
-    for(var i=0; i<clean.length; i++){
-      var val = BASE32_ALPHABET.indexOf(clean[i]);
-      if(val === -1) return null;
-      bits += val.toString(2).padStart(5, '0');
-    }
-    var bytes = [];
-    for(var j=0; j+8 <= bits.length; j+=8){
-      bytes.push(parseInt(bits.substring(j, j+8), 2));
-    }
-    if(!bytes.length) return null;
-    // build CryptoJS WordArray from byte array
-    var words = [];
-    for(var k=0; k<bytes.length; k++){
-      words[k >>> 2] = (words[k >>> 2] || 0) | (bytes[k] << (24 - (k % 4) * 8));
-    }
-    return CryptoJS.lib.WordArray.create(words, bytes.length);
-  }
+    // Common two-level public suffixes (small offline heuristic instead of the full Public Suffix List)
+    var MULTI_SLD = ['co.uk','org.uk','gov.uk','ac.uk','com.au','net.au','org.au','co.jp','or.jp','ne.jp','co.in','co.nz',
+      'co.za','com.br','com.mx','com.ar','com.tr','com.sa','com.eg','com.cn','com.hk','com.sg','com.my','com.pk','com.ua',
+      'co.kr','com.iq','edu.iq','gov.iq','net.iq','org.iq'];
+    var SUSP_TLDS = ['tk','ml','ga','cf','gq','xyz','top','click','zip','mov','work','support','rest','country','icu','buzz','cam','monster','loan','download','review'];
+    var SHORTENERS = ['bit.ly','tinyurl.com','t.co','goo.gl','is.gd','cutt.ly','rb.gy','ow.ly','buff.ly','shorturl.at','tiny.cc','rebrand.ly'];
+    var KEYWORDS = ['login','log-in','signin','sign-in','verify','verification','update','security','secure','account','password',
+      'confirm','wallet','billing','payment','suspend','unlock','recover','support','authenticate','validate','webscr','banking','claim','reward','bonus','giveaway'];
 
-  function intToWordArray8Bytes(num){
-    // 64-bit big-endian counter, JS-safe up to 2^53
-    var high = Math.floor(num / 4294967296);
-    var low = num % 4294967296;
-    return CryptoJS.lib.WordArray.create([high, low], 8);
-  }
+    // Look-alike characters (Cyrillic / Greek / Latin variants) -> ASCII skeleton
+    var CONF = {
+      '\u0430':'a','\u0435':'e','\u043E':'o','\u0440':'p','\u0441':'c','\u0445':'x','\u0443':'y','\u0456':'i','\u0458':'j',
+      '\u0455':'s','\u0501':'d','\u04CF':'l','\u04BB':'h','\u051B':'q','\u051D':'w','\u043A':'k',
+      '\u03BF':'o','\u03B1':'a','\u03BD':'v','\u03C1':'p','\u03B9':'i','\u03BA':'k','\u03C5':'u','\u03F2':'c',
+      '\u0131':'i','\u0261':'g'
+    };
 
-  function generateTOTP(base32Secret, forTime){
-    try{
-      var key = base32ToWordArray(base32Secret);
-      if(!key) return null;
-      var counter = Math.floor((forTime !== undefined ? forTime : Date.now()/1000) / 30);
-      var counterWA = intToWordArray8Bytes(counter);
-      var hmac = CryptoJS.HmacSHA1(counterWA, key);
-      var hmacWords = hmac.words;
-      var hmacBytes = [];
-      for(var i=0; i<hmac.sigBytes; i++){
-        hmacBytes.push((hmacWords[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff);
+    /* ---------- Helpers ---------- */
+    function escHtml(s){
+      return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; });
+    }
+    function decodeSafe(s){ try{ return decodeURIComponent(s); }catch(e){ return s; } }
+    function clip(s, n){ s = String(s); return s.length > n ? s.slice(0, n) + '…' : s; }
+
+    // RFC 3492 Punycode decoder (so xn-- labels can be shown and inspected in their Unicode form)
+    function punyAdapt(delta, num, first){
+      var k = 0;
+      delta = first ? Math.floor(delta / 700) : delta >> 1;
+      delta += Math.floor(delta / num);
+      for(; delta > 455; k += 36) delta = Math.floor(delta / 35);
+      return Math.floor(k + 36 * delta / (delta + 38));
+    }
+    function punyDecode(input){
+      var out = [], i = 0, n = 128, bias = 72, basic = input.lastIndexOf('-'), j, index;
+      if(basic < 0) basic = 0;
+      for(j = 0; j < basic; ++j){
+        if(input.charCodeAt(j) >= 128) throw new Error('bad');
+        out.push(input.charCodeAt(j));
       }
-      var offset = hmacBytes[hmacBytes.length - 1] & 0x0f;
-      var binCode = ((hmacBytes[offset] & 0x7f) << 24) |
-                    ((hmacBytes[offset+1] & 0xff) << 16) |
-                    ((hmacBytes[offset+2] & 0xff) << 8) |
-                    (hmacBytes[offset+3] & 0xff);
-      var otp = (binCode % 1000000).toString().padStart(6, '0');
-      return otp;
-    } catch(e){
+      for(index = basic > 0 ? basic + 1 : 0; index < input.length;){
+        var oldi = i;
+        for(var w = 1, k = 36;; k += 36){
+          if(index >= input.length) throw new Error('bad');
+          var cp = input.charCodeAt(index++);
+          var digit = cp - 48 < 10 ? cp - 22 : cp - 65 < 26 ? cp - 65 : cp - 97 < 26 ? cp - 97 : 36;
+          if(digit >= 36) throw new Error('bad');
+          i += digit * w;
+          var t = k <= bias ? 1 : k >= bias + 26 ? 26 : k - bias;
+          if(digit < t) break;
+          w *= 36 - t;
+        }
+        var len = out.length + 1;
+        bias = punyAdapt(i - oldi, len, oldi === 0);
+        n += Math.floor(i / len);
+        i %= len;
+        out.splice(i++, 0, n);
+      }
+      return String.fromCodePoint.apply(null, out);
+    }
+
+    // Optimal-string-alignment distance (insert / delete / substitute / adjacent swap)
+    function osa(a, b){
+      var al = a.length, bl = b.length, d = [], i, j;
+      for(i = 0; i <= al; i++) d[i] = [i];
+      for(j = 0; j <= bl; j++) d[0][j] = j;
+      for(i = 1; i <= al; i++){
+        for(j = 1; j <= bl; j++){
+          var cost = a.charAt(i-1) === b.charAt(j-1) ? 0 : 1;
+          d[i][j] = Math.min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + cost);
+          if(i > 1 && j > 1 && a.charAt(i-1) === b.charAt(j-2) && a.charAt(i-2) === b.charAt(j-1))
+            d[i][j] = Math.min(d[i][j], d[i-2][j-2] + 1);
+        }
+      }
+      return d[al][bl];
+    }
+
+    // Normalise homoglyphs + leetspeak into possible ASCII "skeletons" of a label
+    function skeletons(label){
+      var s = label.toLowerCase(), m = '', i;
+      for(i = 0; i < s.length; i++){ var c = s.charAt(i); m += CONF[c] || c; }
+      m = m.replace(/0/g,'o').replace(/3/g,'e').replace(/4/g,'a').replace(/5/g,'s').replace(/7/g,'t')
+           .replace(/\$/g,'s').replace(/@/g,'a').replace(/rn/g,'m').replace(/vv/g,'w');
+      var a = m.replace(/1/g,'l');
+      return [a, m.replace(/1/g,'i'), a.replace(/i/g,'l')];
+    }
+
+    var KIND_RANK = { exact:4, lookalike:3, typo:2, embedded:1 };
+    // Does this DNS label imitate a well-known brand?  -> {brand, kind} | null
+    function matchBrand(label){
+      var raw = label.toLowerCase(), vs = skeletons(raw), best = null;
+      BRANDS.forEach(function(b){
+        var B = b.name, kind = null;
+        if(raw === B) kind = 'exact';
+        vs.forEach(function(v){
+          var flat = v.replace(/-/g,'');
+          if(!kind && raw !== B && (v === B || flat === B)) kind = 'lookalike';
+        });
+        if(!kind && B.length >= 6){
+          vs.forEach(function(v){ if(!kind && osa(v.replace(/-/g,''), B) === 1) kind = 'typo'; });
+        }
+        if(!kind){
+          vs.forEach(function(v){
+            var flat = v.replace(/-/g,'');
+            if(kind) return;
+            if(v.split('-').indexOf(B) > -1 && v !== B) kind = 'embedded';
+            else if(B.length >= 6 && flat.length > B.length && (flat.indexOf(B) === 0 || flat.lastIndexOf(B) === flat.length - B.length)) kind = 'embedded';
+          });
+        }
+        if(kind && (!best || KIND_RANK[kind] > KIND_RANK[best.kind])) best = { brand:B, kind:kind };
+      });
+      return best;
+    }
+
+    function officialOf(reg){
+      for(var i = 0; i < BRANDS.length; i++) if(BRANDS[i].official.indexOf(reg) > -1) return BRANDS[i].name;
       return null;
     }
-  }
 
-  var RING_CIRCUMFERENCE = 2 * Math.PI * 42;
-  $('ring-fg').setAttribute('stroke-dasharray', RING_CIRCUMFERENCE.toFixed(1));
-
-  var qrInstance = null;
-  function buildOtpAuthUrl(secret){
-    var label = encodeURIComponent('CyberPassWeb:user@device');
-    var issuer = encodeURIComponent('CyberPassWeb');
-    return 'otpauth://totp/' + label + '?secret=' + encodeURIComponent(secret.replace(/\s+/g,'')) + '&issuer=' + issuer + '&digits=6&period=30';
-  }
-
-  function renderQR(secret){
-    var box = $('qrcode-box');
-    box.innerHTML = '';
-    try{
-      qrInstance = new QRCode(box, {
-        text: buildOtpAuthUrl(secret),
-        width: 120,
-        height: 120,
-        colorDark: "#030712",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.M
-      });
-    } catch(e){
-      box.innerHTML = '<p class="text-xs text-red-600 p-4">QR unavailable</p>';
+    function scriptsOf(s){
+      return {
+        latin: /[a-z]/.test(s),
+        cyr:   /[\u0400-\u052F]/.test(s),
+        greek: /[\u0370-\u03FF]/.test(s),
+        arabic:/[\u0600-\u077F]/.test(s)
+      };
     }
-  }
 
-  function refreshTOTP(){
-    var secret = $('totp-secret').value.trim();
-    var codeEl = $('totp-code');
-    var now = Date.now()/1000;
-    var secondsIntoWindow = Math.floor(now % 30);
-    var secondsLeft = 30 - secondsIntoWindow;
+    var SEV_ORDER = { critical:0, high:1, medium:2, low:3, info:4, ok:5 };
+    var LEVELS = {
+      CRITICAL:  { color:'#EF4444', text:'Strong phishing / impersonation indicators. Do not open this link or enter any credentials.' },
+      HIGH:      { color:'#FB923C', text:'Multiple red flags. Treat it as malicious unless you can verify the source independently.' },
+      SUSPICIOUS:{ color:'#F59E0B', text:'Some warning signs. Verify the real domain manually before trusting this link.' },
+      LOW:       { color:'#10B981', text:'No major heuristic red flags found. This is not a guarantee: always verify the sender and the domain.' }
+    };
 
-    $('totp-seconds').textContent = secondsLeft;
-    var offset = RING_CIRCUMFERENCE * (secondsIntoWindow/30);
-    $('ring-fg').style.strokeDashoffset = offset.toFixed(1);
-    $('ring-fg').style.stroke = secondsLeft <= 5 ? 'var(--crimson)' : 'var(--cyan)';
+    /* ---------- Core analysis (pure function: string -> report) ---------- */
+    function analyze(rawInput){
+      var input = String(rawInput || '').trim(), F = [], score = 0;
+      function add(sev, title, detail, pts){ pts = pts || 0; F.push({ sev:sev, title:title, detail:detail, pts:pts }); score += pts; }
 
-    var otp = generateTOTP(secret, now);
-    if(otp){
-      codeEl.textContent = otp.slice(0,3) + ' ' + otp.slice(3);
-      codeEl.style.opacity = 1;
-    } else {
-      codeEl.textContent = 'INVALID';
-      codeEl.style.opacity = 0.5;
+      if(!input) return { error:'Enter a URL or domain to analyze.' };
+      if(input.length > 2048) return { error:'Input is too long (max 2048 characters).' };
+
+      // Non-navigational / dangerous pseudo-schemes: report immediately, nothing to parse as a host
+      var bad = /^(javascript|data|vbscript|blob|file)\s*:/i.exec(input);
+      if(bad){
+        add('critical', 'Dangerous scheme "' + bad[1].toLowerCase() + ':"', 'This is not a web address. It can run code or embed content directly in your browser. Never open it from an untrusted source.', 90);
+        return finish({ scheme:bad[1].toLowerCase() + ':', host:'—' }, F, score, input, false);
+      }
+
+      // Auto-prepend a protocol when the user typed a bare domain ("google.com")
+      var norm = input, added = false;
+      if(/^\/\//.test(norm)){ norm = 'https:' + norm; added = true; }
+      else if(!/^[a-z][a-z0-9+.\-]*:\/\//i.test(norm)){ norm = 'https://' + norm; added = true; }
+
+      var u;
+      try{ u = new URL(norm); }
+      catch(e){ return { error:'This input could not be parsed as a valid URL. Check for spaces, illegal characters or a malformed host.' }; }
+
+      var host = u.hostname.replace(/\.$/, '').toLowerCase();   // WHATWG-normalised host (IDN already in xn-- form)
+      if(!host) return { error:'No host name found in this URL.' };
+      var isV6 = host.charAt(0) === '[';
+      var isV4 = /^\d{1,3}(\.\d{1,3}){3}$/.test(host);
+      var isIP = isV4 || isV6;
+
+      var anat = { scheme:u.protocol, host:host, added:added, norm:norm, port:u.port, path:u.pathname, query:u.search };
+
+      /* --- 1. Protocol / port --- */
+      if(u.protocol === 'http:') add('medium', 'Unencrypted HTTP', 'The connection is not encrypted, so credentials and data can be read or altered in transit.', 10);
+      else if(u.protocol !== 'https:') add('medium', 'Unusual protocol "' + u.protocol + '"', 'Legitimate login pages are served over HTTPS.', 15);
+      if(u.port) add('low', 'Non-standard port :' + u.port, 'Phishing kits and temporary servers often run on unusual ports.', 8);
+
+      /* --- 2. User-info / "@" trick (new URL() tells us the REAL destination) --- */
+      if(u.username || u.password){
+        var uiLooksDomain = u.username.indexOf('.') > -1;
+        add(uiLooksDomain ? 'critical' : 'high', 'Credentials / "@" trick in the URL',
+          'Everything before "@" is user-info, not the destination. The browser will actually connect to "' + host + '".' + (uiLooksDomain ? ' The fake part "' + clip(decodeSafe(u.username), 60) + '" is there only to fool the reader.' : ''),
+          uiLooksDomain ? 55 : 40);
+        anat.user = decodeSafe(u.username) + (u.password ? ':•••' : '');
+      } else if(/@/.test(u.pathname + u.search + u.hash)){
+        add('low', '"@" found in path / query', 'Unusual in normal links; sometimes used to hide the real target.', 5);
+      }
+      if(/\\/.test(norm)) add('low', 'Backslash in URL', 'Browsers treat "\\" like "/" in web URLs, which some phishing links abuse to confuse parsers.', 5);
+
+      var labels, uLabels, reg = '—', suffix = '—', subs = [], offBrand = null;
+
+      if(isIP){
+        /* --- 3. Direct IP address --- */
+        var rawHost = (/^[a-z][a-z0-9+.\-]*:\/\/(?:[^\/?#]*@)?(\[[^\]]*\]|[^\/?#:]*)/i.exec(norm) || [])[1] || host;
+        add('high', 'Direct IP address instead of a domain', 'Legitimate services almost always use a domain name. IP-based links are common in phishing and malware delivery (' + host + ').', 35);
+        if(isV4 && rawHost.replace(/\.$/, '').toLowerCase() !== host)
+          add('high', 'Obfuscated IP encoding', 'The host was typed as "' + clip(rawHost, 40) + '" (decimal / hex / octal form) but resolves to ' + host + '.', 15);
+        if(isV4 && /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|0\.)/.test(host))
+          add('info', 'Private / loopback address', 'Not reachable from the public internet; it points at a device inside a local network.', 0);
+        labels = uLabels = [host];
+      } else {
+        labels = host.split('.');
+        var sufLen = (labels.length >= 3 && MULTI_SLD.indexOf(labels.slice(-2).join('.')) > -1) ? 2 : 1;
+        if(labels.length > sufLen){
+          reg = labels.slice(-(sufLen + 1)).join('.');
+          subs = labels.slice(0, labels.length - sufLen - 1);
+        } else { reg = host; }
+        suffix = labels.length > sufLen ? labels.slice(-sufLen).join('.') : '—';
+
+        // Decode punycode labels for inspection
+        var punyBad = false, puny = [];
+        uLabels = labels.map(function(l){
+          if(l.indexOf('xn--') === 0){
+            puny.push(l);
+            try{ return punyDecode(l.slice(4)); }catch(e){ punyBad = true; return l; }
+          }
+          return l;
+        });
+        var uHost = uLabels.join('.');
+        anat.uhost = uHost !== host ? uHost : '';
+
+        offBrand = officialOf(reg);
+
+        /* --- 4. Homograph / mixed scripts --- */
+        var mixed = false, brandHit = null;
+        uLabels.forEach(function(l, idx){
+          if(l.indexOf('xn--') === 0 || /^[\x00-\x7F]*$/.test(l)) return;
+          var sc = scriptsOf(l);
+          if(sc.latin && (sc.cyr || sc.greek || sc.arabic)) mixed = true;
+        });
+
+        /* --- 5. Brand impersonation / typosquatting --- */
+        if(offBrand){
+          add('ok', 'Official ' + offBrand + ' domain', '"' + reg + '" is on the built-in list of official domains for this brand.', 0);
+        } else {
+          var sldIdx = labels.length > sufLen ? labels.length - sufLen - 1 : 0;
+          var m = matchBrand(uLabels[sldIdx]);
+          var tld = labels[labels.length - 1];
+          var ccTLD = /^[a-z]{2}$/.test(tld);
+          if(m){
+            brandHit = m;
+            var shown = uLabels[sldIdx];
+            if(m.kind === 'lookalike')
+              add('critical', 'Look-alike of "' + m.brand + '" (character substitution)', '"' + clip(shown, 60) + '" imitates "' + m.brand + '" using look-alike characters, digits or hyphens.', 50);
+            else if(m.kind === 'typo')
+              add('high', 'Typosquatting: one edit away from "' + m.brand + '"', '"' + clip(shown, 60) + '" differs from "' + m.brand + '" by a single typo (missing, extra, wrong or swapped character).', 45);
+            else if(m.kind === 'embedded')
+              add('high', 'Brand name embedded in an unofficial domain', '"' + clip(shown, 60) + '" wraps the name "' + m.brand + '" inside a different domain (' + reg + ').', 40);
+            else if(ccTLD)
+              add('medium', 'Brand name on a regional domain', '"' + reg + '" uses the name "' + m.brand + '" but is not on the official list. It may be a legitimate regional site: verify manually.', 12);
+            else
+              add('high', 'Brand name on an unofficial domain', '"' + reg + '" uses the name "' + m.brand + '" but the real ' + m.brand + ' domains are ' + BRANDS.filter(function(b){ return b.name === m.brand; })[0].official.join(', ') + '.', 35);
+          }
+          // brand appearing in sub-domain labels (paypal.evil.com)
+          var subHit = null, subLabel = '';
+          subs.forEach(function(sl, i){
+            var mm = matchBrand(uLabels[i]);
+            if(mm && (!subHit || KIND_RANK[mm.kind] > KIND_RANK[subHit.kind])){ subHit = mm; subLabel = uLabels[i]; }
+          });
+          if(subHit){
+            brandHit = brandHit || subHit;
+            add('high', 'Brand "' + subHit.brand + '" used as a sub-domain', 'The label "' + clip(subLabel, 60) + '" is only a sub-domain. The real owner is "' + reg + '", not ' + subHit.brand + '.', 45);
+          }
+          // official domain written inside the host (paypal.com.evil.com)
+          var embeddedOfficial = null;
+          BRANDS.forEach(function(b){
+            b.official.forEach(function(od){
+              if(!embeddedOfficial && (host.indexOf(od + '.') === 0 || host.indexOf('.' + od + '.') > -1)) embeddedOfficial = od;
+            });
+          });
+          if(embeddedOfficial)
+            add('critical', 'Official domain faked inside the host name', '"' + embeddedOfficial + '" appears in the host, but the actual domain is "' + reg + '".', 55);
+        }
+
+        if(mixed)
+          add('critical', 'Mixed-script label (IDN homograph)', 'A single label mixes Latin letters with Cyrillic / Greek / Arabic characters that look identical to Latin ones.', 40);
+        if(punyBad)
+          add('medium', 'Malformed Punycode', 'An xn-- label could not be decoded; this is abnormal.', 20);
+        if(puny.length){
+          var risky = mixed || (brandHit && /[^\x00-\x7F]/.test(uHost));
+          add(risky ? 'high' : 'medium', 'Punycode / IDN domain (xn--)',
+            'Label' + (puny.length > 1 ? 's' : '') + ' ' + puny.slice(0, 3).join(', ') + ' decode' + (puny.length > 1 ? '' : 's') + ' to "' + clip(uHost, 80) + '". ' +
+            (risky ? 'The decoded form imitates a Latin name.' : 'International domains can be legitimate, but visually deceptive ones use this exact mechanism: verify it.'),
+            risky ? 25 : 15);
+        }
+
+        /* --- 6. Sub-domain depth / URL complexity --- */
+        if(subs.length >= 4) add('high', subs.length + ' sub-domain levels', 'Very deep nesting ("' + clip(subs.join('.'), 80) + '") is typical of links that bury the real domain.', 25);
+        else if(subs.length === 3) add('medium', '3 sub-domain levels', '"' + clip(subs.join('.'), 80) + '" in front of ' + reg + '. Check that the last two labels are the domain you expect.', 18);
+        else if(subs.length === 2) add('low', '2 sub-domain levels', '"' + clip(subs.join('.'), 80) + '" in front of ' + reg + '.', 8);
+
+        var hy = (host.replace(/xn--/g, '').match(/-/g) || []).length;
+        if(hy >= 3) add('medium', 'Many hyphens in host (' + hy + ')', 'Long hyphenated hosts such as "secure-login-update" are a classic phishing pattern.', 10);
+
+        if(SUSP_TLDS.indexOf(tld) > -1) add('medium', 'High-abuse top-level domain ".' + tld + '"', 'This TLD is cheap or free and heavily over-represented in phishing campaigns.', 12);
+        if(SHORTENERS.indexOf(reg) > -1) add('medium', 'URL shortener', 'The real destination is hidden behind "' + reg + '". Expand it with a trusted tool before opening.', 20);
+      }
+
+      /* --- 7. Length / encoding / redirect parameters --- */
+      if(norm.length > 100) add('medium', 'Very long URL (' + norm.length + ' chars)', 'Long URLs are used to push the real domain out of view.', 10);
+      else if(norm.length > 75) add('low', 'Long URL (' + norm.length + ' chars)', 'Longer than typical for a legitimate landing link.', 5);
+      var pct = (norm.match(/%[0-9a-f]{2}/gi) || []).length;
+      if(pct >= 6) add('low', 'Heavy percent-encoding (' + pct + ' sequences)', 'Encoding can hide keywords or redirect targets from quick inspection.', 8);
+      if(/[?&](url|redirect|redir|next|return|continue|dest|destination|goto|link|target)=(https?|%68%74%74%70)/i.test(u.search))
+        add('medium', 'Embedded redirect target', 'A query parameter contains another URL, a pattern used for open-redirect abuse.', 12);
+
+      /* --- 8. Sensitive phishing keywords --- */
+      var hostKw = isIP ? [] : KEYWORDS.filter(function(k){ return host.indexOf(k) > -1; });
+      var pathStr = decodeSafe(u.pathname + u.search).toLowerCase();
+      var pathKw = KEYWORDS.filter(function(k){ return hostKw.indexOf(k) === -1 && pathStr.indexOf(k) > -1; });
+      if(hostKw.length)
+        add(offBrand ? 'info' : 'medium', 'Sensitive keywords in the host: ' + hostKw.join(', '), offBrand ? 'Expected on an official domain.' : 'Phishing domains stuff the host name with words that sound official.', offBrand ? 0 : Math.min(30, hostKw.length * 12));
+      if(pathKw.length)
+        add(offBrand ? 'info' : 'low', 'Sensitive keywords in the path / query: ' + pathKw.join(', '), offBrand ? 'Expected on an official domain.' : 'Credential-harvesting pages usually live under paths like these.', offBrand ? 0 : Math.min(18, pathKw.length * 6));
+
+      if(!F.some(function(f){ return f.pts > 0; }))
+        add('ok', 'No heuristic red flags', 'None of the local checks (IP host, Punycode, sub-domains, "@" trick, brand look-alikes, keywords) triggered.', 0);
+
+      anat.reg = reg; anat.suffix = suffix; anat.subs = subs;
+      return finish(anat, F, score, input, added);
     }
-  }
 
-  var lastSecretRendered = null;
-  function tick(){
-    refreshTOTP();
-    var secret = $('totp-secret').value.trim();
-    if(secret !== lastSecretRendered && secret.length){
-      renderQR(secret);
-      lastSecretRendered = secret;
+    function finish(anat, F, score, input, added){
+      score = Math.min(100, score);
+      var level = score >= 60 ? 'CRITICAL' : score >= 35 ? 'HIGH' : score >= 15 ? 'SUSPICIOUS' : 'LOW';
+      F.sort(function(a, b){ return SEV_ORDER[a.sev] - SEV_ORDER[b.sev] || b.pts - a.pts; });
+      return { score:score, level:level, color:LEVELS[level].color, summary:LEVELS[level].text, anat:anat, findings:F };
     }
-  }
 
-  $('totp-secret').addEventListener('input', function(){ /* re-render handled in tick loop */ });
+    /* ---------- Rendering (every dynamic string is HTML-escaped) ---------- */
+    var EMPTY_HTML = '<div class="ua-empty"><i class="fa-solid fa-shield-halved"></i><p>Paste a link or a bare domain (e.g. <span class="mono">google.com</span>) and press Analyze.<br>A full risk report will appear here.</p></div>';
 
-  function randomBase32Secret(len){
-    var out = '';
-    for(var i=0; i<len; i++){
-      out += BASE32_ALPHABET[secureRandomInt(BASE32_ALPHABET.length)];
+    function row(k, v, raw){ return '<div class="ua-k">' + k + '</div><div class="ua-v">' + (raw ? v : escHtml(v)) + '</div>'; }
+
+    function render(r){
+      var box = $('url-report');
+      if(r.error){
+        box.innerHTML = '<div class="ua-error fade-in"><i class="fa-solid fa-triangle-exclamation mr-2"></i>' + escHtml(r.error) + '</div>';
+        return;
+      }
+      var C = 2 * Math.PI * 42, a = r.anat, rows = '';
+      if(a.added) rows += row('Interpreted as', a.norm + '  (https:// added automatically)');
+      rows += row('Scheme', a.scheme);
+      rows += row('Effective host', '<b>' + escHtml(a.host) + '</b>' + (a.uhost ? ' &rarr; ' + escHtml(a.uhost) : ''), true);
+      if(a.reg && a.reg !== '—') rows += row('Registrable domain', a.reg);
+      if(a.suffix && a.suffix !== '—') rows += row('Suffix / TLD', '.' + a.suffix);
+      if(a.subs) rows += row('Sub-domains', a.subs.length ? a.subs.length + '  (' + a.subs.join('.') + ')' : '0');
+      if(a.port) rows += row('Port', a.port);
+      if(a.user) rows += row('User-info', a.user);
+      if(a.path && a.path !== '/') rows += row('Path', clip(a.path, 140));
+      if(a.query) rows += row('Query', clip(a.query, 140));
+
+      var finds = r.findings.map(function(f){
+        return '<div class="ua-find sev-' + f.sev + '"><span class="ua-sev">' + f.sev.toUpperCase() + '</span><div>' +
+          '<p class="ua-ft">' + escHtml(f.title) + (f.pts ? ' <span class="ua-pts mono">+' + f.pts + '</span>' : '') + '</p>' +
+          '<p class="ua-fd">' + escHtml(f.detail) + '</p></div></div>';
+      }).join('');
+
+      box.innerHTML =
+        '<div class="ua-verdict fade-in" style="--ua:' + r.color + '">' +
+          '<div class="ua-ring"><svg viewBox="0 0 100 100" width="96" height="96"><circle class="ua-ring-bg" cx="50" cy="50" r="42"></circle>' +
+          '<circle class="ua-ring-fg" cx="50" cy="50" r="42" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + C.toFixed(1) + '"></circle></svg>' +
+          '<div class="ua-ring-num"><span>' + r.score + '</span><small>/ 100</small></div></div>' +
+          '<div><p class="section-title mb-1">Risk verdict</p><p class="ua-level">' + r.level + '</p><p class="ua-sum">' + escHtml(r.summary) + '</p></div>' +
+        '</div>' +
+        '<p class="section-title mb-2">URL anatomy</p><div class="ua-anat fade-in">' + rows + '</div>' +
+        '<p class="section-title mb-2">Findings (' + r.findings.length + ')</p><div class="fade-in">' + finds + '</div>';
+
+      var fg = box.querySelector('.ua-ring-fg');
+      requestAnimationFrame(function(){ requestAnimationFrame(function(){ fg.style.strokeDashoffset = (C * (1 - r.score / 100)).toFixed(1); }); });
     }
-    return out;
-  }
 
-  $('totp-random').addEventListener('click', function(){
-    $('totp-secret').value = randomBase32Secret(16);
-    lastSecretRendered = null; // force QR re-render
-    tick();
-    showToast('New secret generated');
-  });
+    function run(){ render(analyze($('url-input').value)); }
 
-  tick();
-  setInterval(tick, 1000);
+    $('url-analyze').addEventListener('click', run);
+    $('url-input').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); run(); } });
+    $('url-clear').addEventListener('click', function(){
+      $('url-input').value = '';
+      $('url-report').innerHTML = EMPTY_HTML;
+      $('url-input').focus();
+    });
+    $('url-samples').addEventListener('click', function(e){
+      var b = e.target.closest ? e.target.closest('[data-sample]') : null;
+      if(b){ $('url-input').value = b.getAttribute('data-sample'); run(); }
+    });
+    $('url-report').innerHTML = EMPTY_HTML;
+  })();
 
   /* ============================================================
      FORENSIC CRACKING LAB (100% client-side simulation)
