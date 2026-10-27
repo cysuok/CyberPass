@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CyberPass Web — Next-Gen Identity, Steganography &amp; Password Intelligence</title>
+
+<!-- External Logo: Browser Tab Favicon & Apple Touch Icon -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 110 100'%3E%3Crect width='110' height='100' rx='22' fill='%231A1E29'/%3E%3Cpath d='M 60 32 A 25 25 0 1 0 56 73' fill='none' stroke='%23155EEF' stroke-width='11.5' stroke-linecap='butt'/%3E%3Cpath d='M 50 41 L 44 41 A 10.5 10.5 0 0 0 44 62 L 77 62 A 17.5 17.5 0 1 0 60 44.5 L 60 85' fill='none' stroke='%2300B2FF' stroke-width='11.5' stroke-linecap='butt' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 110 100'%3E%3Crect width='110' height='100' rx='22' fill='%231A1E29'/%3E%3Cpath d='M 60 32 A 25 25 0 1 0 56 73' fill='none' stroke='%23155EEF' stroke-width='11.5' stroke-linecap='butt'/%3E%3Cpath d='M 50 41 L 44 41 A 10.5 10.5 0 0 0 44 62 L 77 62 A 17.5 17.5 0 1 0 60 44.5 L 60 85' fill='none' stroke='%2300B2FF' stroke-width='11.5' stroke-linecap='butt' stroke-linejoin='round'/%3E%3C/svg%3E">
+
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -48,6 +53,17 @@
   }
 
   header { background: rgba(24,24,24,0.95); border-bottom: 1px solid var(--border-soft); }
+
+  .brand-logo-box {
+    background: #1A1E29;
+    border: 1px solid rgba(0, 178, 255, 0.28);
+    box-shadow: 0 4px 18px -4px rgba(0, 178, 255, 0.35);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .brand-logo-box:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 22px -3px rgba(0, 178, 255, 0.55);
+  }
 
   .glass {
     background: linear-gradient(180deg, rgba(32,32,32,0.96), rgba(21,21,21,0.97));
@@ -247,7 +263,6 @@
     object-fit: contain;
     display: block;
   }
-  /* Animated Pixel Scanner Overlay during Stego Operations */
   .pixel-scan-beam {
     position: absolute;
     inset: 0;
@@ -299,15 +314,22 @@
 </head>
 <body class="theme-default">
 
-<!-- HEADER -->
+<!-- HEADER WITH OFFICIAL CYBERPASS LOGO -->
 <header class="sticky top-0 z-40">
   <div class="max-w-7xl mx-auto px-4 sm:px-8 py-3.5 flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#C0C0C0,#E10600);">
-        <i class="fa-solid fa-shield-halved text-[#141414] text-lg"></i>
+    <div class="flex items-center gap-3.5">
+      <!-- Internal Brand Logo Icon (Interlocking CP Monogram) -->
+      <div class="w-11 h-11 rounded-xl flex items-center justify-center brand-logo-box">
+        <svg viewBox="0 0 110 100" class="w-9 h-9" aria-label="CyberPass Logo">
+          <path d="M 60 32 A 25 25 0 1 0 56 73" fill="none" stroke="#155EEF" stroke-width="11.5" stroke-linecap="butt"/>
+          <path d="M 50 41 L 44 41 A 10.5 10.5 0 0 0 44 62 L 77 62 A 17.5 17.5 0 1 0 60 44.5 L 60 85" fill="none" stroke="#00B2FF" stroke-width="11.5" stroke-linecap="butt" stroke-linejoin="round"/>
+        </svg>
       </div>
       <div>
-        <h1 class="text-lg font-bold tracking-tight leading-none">CyberPass<span style="color:var(--accent);">Web</span></h1>
+        <h1 class="text-xl font-bold tracking-tight leading-none flex items-center">
+          <span class="text-white">Cyber</span><span style="color:#00B2FF;">Pass</span>
+          <span class="text-[10px] mono uppercase px-1.5 py-0.5 ml-2 rounded border" style="color:var(--accent); border-color:var(--border-soft);">Web</span>
+        </h1>
         <p class="text-[11px] leading-none mt-1" style="color:var(--text-muted);">Identity, Steganography &amp; Password Intelligence</p>
       </div>
     </div>
@@ -838,7 +860,15 @@
     </div>
   </section>
 
-  <footer class="text-center text-xs pt-6 pb-4 space-y-1" style="color:var(--text-muted);">
+  <!-- FOOTER WITH INTERNAL BRAND LOGO -->
+  <footer class="text-center text-xs pt-6 pb-4 space-y-2" style="color:var(--text-muted);">
+    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border" style="background:#1A1E29; border-color:rgba(0,178,255,0.25);">
+      <svg viewBox="0 0 110 100" class="w-5 h-5" aria-hidden="true">
+        <path d="M 60 32 A 25 25 0 1 0 56 73" fill="none" stroke="#155EEF" stroke-width="12" stroke-linecap="butt"/>
+        <path d="M 50 41 L 44 41 A 10.5 10.5 0 0 0 44 62 L 77 62 A 17.5 17.5 0 1 0 60 44.5 L 60 85" fill="none" stroke="#00B2FF" stroke-width="12" stroke-linecap="butt" stroke-linejoin="round"/>
+      </svg>
+      <span class="font-bold tracking-tight text-sm"><span class="text-white">Cyber</span><span style="color:#00B2FF;">Pass</span></span>
+    </div>
     <p>CyberPass Web — 100% Client-Side Cryptographic &amp; Steganography Engine. Works Offline &amp; Online.</p>
     <p>Developed &amp; Maintained by <span class="font-semibold" style="color:var(--accent);">Moamal Riyadh</span> © 2026</p>
   </footer>
@@ -1416,7 +1446,6 @@
     $('stego-msg-len').textContent = msgBytes + ' bytes';
   }
 
-  // Generate an procedural Cyber Carrier Image on Canvas
   function drawProceduralCarrier(canvas, ctx, labelText){
     var w = 600, h = 260;
     canvas.width = w; canvas.height = h;
@@ -1427,20 +1456,17 @@
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
 
-    // Subtle Cyber Grid & Nodes
     ctx.strokeStyle = 'rgba(192,192,192,0.08)';
     ctx.lineWidth = 1;
     for(var x = 0; x < w; x += 25){ ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
     for(var y = 0; y < h; y += 25){ ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
 
-    // Random glowing circuit nodes
     for(var i = 0; i < 28; i++){
       var cx = 20 + randInt(w - 40), cy = 20 + randInt(h - 40), r = 2 + randInt(5);
       ctx.fillStyle = (i % 3 === 0) ? 'rgba(225,6,0,0.65)' : 'rgba(192,192,192,0.35)';
       ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
     }
 
-    // Center Badge
     ctx.fillStyle = 'rgba(20,20,20,0.82)';
     ctx.strokeStyle = 'rgba(225,6,0,0.6)';
     ctx.lineWidth = 1.5;
@@ -1455,7 +1481,6 @@
     ctx.font = '12px "JetBrains Mono", monospace';
     ctx.fillText('24-BIT RGB LSB CONTAINER // ID #' + (1000 + randInt(9000)), w / 2, 150);
 
-    // Ensure all alpha values are 255 to prevent premultiplied alpha corruption
     var imgData = ctx.getImageData(0, 0, w, h);
     var d = imgData.data;
     for(var p = 3; p < d.length; p += 4) d[p] = 255;
@@ -1463,7 +1488,6 @@
     updateStegoCapacity();
   }
 
-  // Stream Cipher Encryption/Decryption using SHA-256 Counter Mode
   function cryptStreamXOR(dataBytes, keyStr){
     var out = new Array(dataBytes.length);
     var blockCount = Math.ceil(dataBytes.length / 32);
@@ -1477,13 +1501,11 @@
     return out;
   }
 
-  // 4-Byte Authentication Tag (MAC) to verify Key + Plaintext integrity
   function computeAuthTag(plainBytes, keyStr){
     var tagInput = 'STEGO_HMAC_AUTH::' + keyStr + '::LEN=' + plainBytes.length + '::' + bytesToUtf8(plainBytes);
     return sha256Bytes(tagInput).slice(0, 4);
   }
 
-  // Embed Encrypted Packet into Canvas Pixels (3 LSBs per pixel: R, G, B)
   function embedStegoPayload(){
     var msg = $('stego-secret-msg').value;
     var key = $('stego-enc-key').value.trim();
@@ -1494,10 +1516,9 @@
     var authTag    = computeAuthTag(plainBytes, key);
     var cipherBytes = cryptStreamXOR(plainBytes, key);
 
-    // Packet Structure: [Magic "CPS1" (4B)] + [Length (4B)] + [AuthTag (4B)] + [Ciphertext (NB)]
     var L = cipherBytes.length;
     var packet = [
-      0x43, 0x50, 0x53, 0x31, // "CPS1"
+      0x43, 0x50, 0x53, 0x31,
       (L >>> 24) & 255, (L >>> 16) & 255, (L >>> 8) & 255, L & 255,
       authTag[0], authTag[1], authTag[2], authTag[3]
     ].concat(cipherBytes);
@@ -1514,7 +1535,7 @@
 
     var bitIdx = 0;
     for(var i = 0; i < data.length; i += 4){
-      data[i + 3] = 255; // Force opaque alpha for lossless PNG
+      data[i + 3] = 255;
       for(var ch = 0; ch < 3; ch++){
         if(bitIdx < totalBits){
           var bytePos = bitIdx >> 3;
@@ -1527,7 +1548,6 @@
     }
     encCtx.putImageData(imgData, 0, 0);
 
-    // Trigger Scan Beam Animation
     var beam = $('enc-scan-beam');
     beam.classList.remove('scanning');
     void beam.offsetWidth;
@@ -1541,7 +1561,6 @@
     showToast('Encrypted & Embedded into Image!');
   }
 
-  // Extract & Decrypt Packet from Decoder Canvas
   function extractStegoPayload(){
     var key = $('stego-dec-key').value.trim();
     if(!key){
@@ -1629,7 +1648,6 @@
     showToast('Payload Unlocked & Decrypted!');
   }
 
-  // Load Uploaded Image File into a Target Canvas
   function loadFileToCanvas(file, canvas, ctx, callback){
     if(!file) return;
     var reader = new FileReader();
@@ -1642,7 +1660,6 @@
         if(h > maxH){ w = Math.round(w * (maxH / h)); h = maxH; }
         canvas.width = w; canvas.height = h;
         ctx.drawImage(img, 0, 0, w, h);
-        // Normalize alpha channel to 255
         var id = ctx.getImageData(0, 0, w, h);
         var d = id.data;
         for(var i = 3; i < d.length; i += 4) d[i] = 255;
@@ -1735,7 +1752,6 @@
     navigator.clipboard.writeText(txt).then(function(){ showToast('Output copied!'); });
   });
 
-  // Initialize Default Stego Carrier & Key
   generateStegoKey();
   drawProceduralCarrier(encCanvas, encCtx, 'CYBERPASS STEGO VAULT');
   drawProceduralCarrier(decCanvas, decCtx, 'AWAITING STEGO PNG IMAGE');
